@@ -1,0 +1,7 @@
+configuration.txt
+*.xml
+*.pyc
+*.csv
+*/__pycache__
+.idea
+*.png
