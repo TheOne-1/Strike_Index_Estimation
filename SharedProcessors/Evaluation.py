@@ -5,7 +5,8 @@ from numpy import sqrt
 from scipy.stats import pearsonr
 from keras import optimizers
 from keras.callbacks import EarlyStopping
-from const import COLORS, FONT_DICT_SMALL, LINE_WIDTH
+from const import COLORS
+from keras import backend as K
 import pandas as pd
 import os
 
@@ -21,15 +22,15 @@ class Evaluation:
 
     @staticmethod
     def _get_all_scores(y_test, y_pred, precision=None):
-        correlation_coeff = pearsonr(y_test, y_pred)[0]
+        R2 = r2_score(y_test, y_pred, multioutput='raw_values')
         RMSE = sqrt(mean_squared_error(y_test, y_pred, multioutput='raw_values'))
         errors = y_test - y_pred
         mean_error = np.mean(errors, axis=0)
         if precision:
-            correlation_coeff = np.round(correlation_coeff, precision)
+            R2 = np.round(R2, precision)
             RMSE = np.round(RMSE, precision)
             mean_error = np.round(mean_error, precision)
-        return correlation_coeff, RMSE, mean_error
+        return R2, RMSE, mean_error
 
     def evaluate_sklearn(self, model, title=''):
         model.fit(self._x_train, self._y_train)
@@ -81,7 +82,7 @@ class Evaluation:
         return y_pred
 
     @staticmethod
-    def plot_fpa_result(y_true, y_pred, sub_id):
+    def plot_nn_result(y_true, y_pred, title=''):
         # change the shape of data so that no error will be raised during pearsonr analysis
         if y_true.shape != 1:
             y_true = y_true.ravel()
@@ -89,37 +90,17 @@ class Evaluation:
             y_pred = y_pred.ravel()
 
         R2, RMSE, mean_error = Evaluation._get_all_scores(y_true, y_pred, precision=3)
-        plt.figure(figsize=(9, 6))
-        Evaluation.format_plot()
-        Evaluation.format_fpa_axis()
+        plt.figure()
         plt.plot(y_true, y_pred, 'b.')
-        mean_error_str = str(mean_error)[:5]
-        pearson_coeff = pearsonr(y_true, y_pred)[0]
-        plt.title('Mean error: ' + mean_error_str + ' degree', fontdict=FONT_DICT_SMALL)
-        plt.savefig('../2_FPA/fpa_figures/FPA_subject_' + str(sub_id) + '.png')
+        plt.plot([0, 1], [0, 1], 'r--')
+        RMSE_str = str(RMSE[0])
+        mean_error_str = str(mean_error)
+        pearson_coeff = str(pearsonr(y_true, y_pred))[1:6]
+        plt.title(title + '\np_correlation: ' + pearson_coeff + '   RMSE: '
+                  + RMSE_str + '  Mean error: ' + mean_error_str)
+        plt.xlabel('true value')
+        plt.ylabel('predicted value')
         return pearson_coeff, RMSE, mean_error
-
-    @staticmethod
-    def format_plot():
-        ax = plt.gca()
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.xaxis.set_tick_params(width=LINE_WIDTH)
-        ax.yaxis.set_tick_params(width=LINE_WIDTH)
-        ax.spines['left'].set_linewidth(LINE_WIDTH)
-        ax.spines['bottom'].set_linewidth(LINE_WIDTH)
-
-    @staticmethod
-    def format_fpa_axis():
-        ax = plt.gca()
-        ax.set_xlim(-20, 65)
-        ax.set_xticks(range(-15, 65, 15))
-        ax.set_xticklabels(range(-15, 65, 15), fontdict=FONT_DICT_SMALL)
-        ax.set_ylim(-20, 65)
-        ax.set_yticks(range(-15, 65, 15))
-        ax.set_yticklabels(range(-15, 65, 15), fontdict=FONT_DICT_SMALL)
-        plt.xlabel('true value (degree)', fontdict=FONT_DICT_SMALL)
-        plt.ylabel('predicted value (degree)', fontdict=FONT_DICT_SMALL)
 
     @staticmethod
     def plot_nn_result_cate_color(y_true, y_pred, category_id, category_names, title=''):
@@ -188,8 +169,6 @@ class Evaluation:
     @staticmethod
     def export_prediction_result(predict_result_df):
         predict_result_df.columns = ['subject_name', 'correlation', 'RMSE', 'mean_error']
-        predict_result_df.loc[-1] = ['absolute mean', np.mean(predict_result_df['correlation']),
-                                     np.mean(predict_result_df['RMSE']), np.mean(abs(predict_result_df['mean_error']))]
         file_path = 'result_conclusion/predict_result_conclusion.csv'
         i_file = 0
         while os.path.isfile(file_path):
