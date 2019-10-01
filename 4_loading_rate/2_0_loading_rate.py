@@ -17,7 +17,7 @@ del train['190513OuYangjue']
 
 # train = {'190521GongChangyang': RUNNING_TRIALS[:1]}
 
-test = {'190522QinZhun':  RUNNING_TRIALS[:1]}
+test = {'190522QinZhun':  RUNNING_TRIALS}
 
 my_LR_processor = ProcessorLR(train, test, IMU_locations, strike_off_from_IMU=2, do_output_norm=True)
 predict_result_all = my_LR_processor.prepare_data()

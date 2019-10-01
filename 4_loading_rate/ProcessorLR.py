@@ -11,9 +11,10 @@ from sklearn.preprocessing import MinMaxScaler
 from Evaluation import Evaluation
 from keras.layers import *
 from keras.models import Model
+from keras import regularizers
 from sklearn.model_selection import train_test_split
 from const import TRIAL_NAMES
-
+import numpy as np
 
 class ProcessorLR:
     def __init__(self, train_sub_and_trials, test_sub_and_trials, imu_locations, strike_off_from_IMU=False,
