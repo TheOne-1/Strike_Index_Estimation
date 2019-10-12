@@ -28,10 +28,10 @@ class AllSubData:
             for trial_name in trials:
                 if 'nike' in trial_name:
                     trial_processor = OneTrialData(subject_name, trial_name, self._sensor_sampling_fre,
-                                                   static_data_df=static_nike_df)
+                                                   self._param_name, static_data_df=static_nike_df)
                 else:
                     trial_processor = OneTrialData(subject_name, trial_name, self._sensor_sampling_fre,
-                                                   static_data_df=static_mini_df)
+                                                   self._param_name, static_data_df=static_mini_df)
                 trial_input, trial_output = trial_processor.get_lr_input_output(
                     self.imu_locations, self._strike_off_from_IMU)
                 all_sub_data_struct.append(trial_input, trial_output, subject_name, trial_name)

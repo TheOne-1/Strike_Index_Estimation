@@ -5,11 +5,12 @@ import pandas as pd
 
 
 class OneTrialData:
-    def __init__(self, subject_name, trial_name, sensor_sampling_fre, static_data_df=None):
+    def __init__(self, subject_name, trial_name, sensor_sampling_fre, param_name, static_data_df=None):
         self._subject_name = subject_name
         self._trial_name = trial_name
         self._sensor_sampling_fre = sensor_sampling_fre
         self._static_data_df = static_data_df
+        self.param_name = param_name
         if sensor_sampling_fre == MOCAP_SAMPLE_RATE:
             self._side = 'l'       # 'l' or 'r'
             data_folder = '\\200Hz\\'
@@ -114,7 +115,7 @@ class OneTrialData:
             strikes, step_num = self.get_strikes()
         else:
             offs, strikes, step_num = self.get_offs_strikes_from_IMU(from_IMU)
-        lr_data = self.gait_param_df[self._side + '_LR'].values
+        lr_data = self.gait_param_df[self._side + "_" +self.param_name].values
         IMU_data = self.get_multi_IMU_data(imu_locations, acc, gyr, mag)
         step_lr_data, step_imu_data = [], []
         for i_step in range(step_num):

@@ -6,19 +6,19 @@ cross validation
 from Evaluation import Evaluation
 import matplotlib.pyplot as plt
 from keras.layers import *
-from ProcessorLR import ProcessorLR
+from ProcessorLRSI import ProcessorLRSI
 from keras.models import Model
 import pandas as pd
 from const import SUB_NAMES
 
 
-class ProcessorLRCrossVali(ProcessorLR):
+class ProcessorLRSICrossVali(ProcessorLRSI):
     def __init__(self, sub_and_trials, sensor_sampling_fre, strike_off_from_IMU=True, do_input_norm=True, do_output_norm=True):
         super().__init__(sub_and_trials, None, sensor_sampling_fre, strike_off_from_IMU,
                          split_train=False, do_input_norm=do_input_norm, do_output_norm=do_output_norm)
 
     def prepare_data_cross_vali(self, test_set_sub_num=1):
-        train_all_data_list = ProcessorLR.clean_all_data(self.train_all_data_list, self.sensor_sampling_fre)
+        train_all_data_list = ProcessorLRSI.clean_all_data(self.train_all_data_list, self.sensor_sampling_fre)
         input_list, output_list = train_all_data_list.get_input_output_list()
         sub_id_list = train_all_data_list.get_sub_id_list()
         trial_id_list = train_all_data_list.get_trial_id_list()
@@ -43,9 +43,9 @@ class ProcessorLRCrossVali(ProcessorLR):
                     output_list_train.append(output_list[i_sample])
 
             self._x_train, self._x_train_aux = self.convert_input(input_list_train, self.sensor_sampling_fre)
-            self._y_train = ProcessorLR.convert_output(output_list_train)
+            self._y_train = ProcessorLRSI.convert_output(output_list_train)
             self._x_test, self._x_test_aux = self.convert_input(input_list_test, self.sensor_sampling_fre)
-            self._y_test = ProcessorLR.convert_output(output_list_test)
+            self._y_test = ProcessorLRSI.convert_output(output_list_test)
 
             # do input normalization
             if self.do_input_norm:

@@ -16,7 +16,7 @@ from sklearn.model_selection import train_test_split
 from const import TRIAL_NAMES
 import numpy as np
 
-class ProcessorLR:
+class ProcessorLRSI:
     def __init__(self, train_sub_and_trials, test_sub_and_trials, imu_locations, strike_off_from_IMU=False,
                  split_train=False, do_input_norm=True, do_output_norm=False):
         """
@@ -37,29 +37,48 @@ class ProcessorLR:
         self.split_train = split_train
         self.do_input_norm = do_input_norm
         self.do_output_norm = do_output_norm
-        self.param_name = 'LR'
-        train_all_data = AllSubData(self.train_sub_and_trials, imu_locations, self.param_name, self.sensor_sampling_fre,
-                                    self.strike_off_from_IMU)
-        self.train_all_data_list = train_all_data.get_all_data()
-        if test_sub_and_trials is not None:
-            test_all_data = AllSubData(self.test_sub_and_trials, imu_locations, self.param_name,
+        self.param_name_1 = 'LR'
+        self.param_name_2 = "SI"
+        self.channel_num = 0
+        train_all_data_LR = AllSubData(self.train_sub_and_trials, imu_locations, self.param_name_1,
                                        self.sensor_sampling_fre, self.strike_off_from_IMU)
-            self.test_all_data_list = test_all_data.get_all_data()
+        self.train_all_data_LR_list = train_all_data_LR.get_all_data()
+        train_all_data_SI = AllSubData(self.train_sub_and_trials, imu_locations, self.param_name_2,
+                                       self.sensor_sampling_fre, self.strike_off_from_IMU)
+        self.train_all_data_SI_list = train_all_data_SI.get_all_data()
+        if test_sub_and_trials is not None:
+            test_all_data_LR = AllSubData(self.test_sub_and_trials, imu_locations, self.param_name_1,
+                                          self.sensor_sampling_fre, self.strike_off_from_IMU)
+            self.test_all_data_LR_list = test_all_data_LR.get_all_data()
+            test_all_data_SI = AllSubData(self.test_sub_and_trials, imu_locations, self.param_name_2,
+                                          self.sensor_sampling_fre, self.strike_off_from_IMU)
+            self.test_all_data_SI_list = test_all_data_SI.get_all_data()
 
     def prepare_data(self):
-        train_all_data_list = ProcessorLR.clean_all_data(self.train_all_data_list, self.sensor_sampling_fre)
-        input_list, output_list = train_all_data_list.get_input_output_list()
-        self.channel_num = input_list[0].shape[1] - 1
-        self._x_train, self._x_train_aux = self.convert_input(input_list, self.sensor_sampling_fre)
-        self._y_train = ProcessorLR.convert_output(output_list)
+        train_all_data_LR_list = ProcessorLRSI.clean_all_data(self.train_all_data_LR_list, self.sensor_sampling_fre)
+        train_all_data_SI_list = ProcessorLRSI.clean_all_data(self.train_all_data_SI_list, self.sensor_sampling_fre)
+
+        input_LR_list, output_LR_list = train_all_data_LR_list.get_input_output_list()
+        input_SI_list, output_SI_list = train_all_data_SI_list.get_input_output_list()
+        self.channel_num = input_LR_list[0].shape[1] - 1
+        self._x_LR_train, self._x_LR_train_aux = self.convert_input(input_LR_list, self.sensor_sampling_fre)
+        self._y_LR_train = ProcessorLRSI.convert_output(output_LR_list)
+        self._x_SI_train, self._x_SI_train_aux = self.convert_input(input_SI_list, self.sensor_sampling_fre)
+        self._y_SI_train = ProcessorLRSI.convert_output(output_SI_list)
 
         if not self.split_train:
-            test_all_data_list = ProcessorLR.clean_all_data(self.test_all_data_list, self.sensor_sampling_fre)
-            input_list, output_list = test_all_data_list.get_input_output_list()
-            self.test_sub_id_list = test_all_data_list.get_sub_id_list()
-            self.test_trial_id_list = test_all_data_list.get_trial_id_list()
-            self._x_test, self._x_test_aux = self.convert_input(input_list, self.sensor_sampling_fre)
-            self._y_test = ProcessorLR.convert_output(output_list)
+            test_all_data_LR_list = ProcessorLRSI.clean_all_data(self.test_all_data_LR_list, self.sensor_sampling_fre)
+            input_LR_list, output_LR_list = test_all_data_LR_list.get_input_output_list()
+            self.test_sub_id_LR_list = test_all_data_LR_list.get_sub_id_list()
+            self.test_trial_id_LR_list = test_all_data_LR_list.get_trial_id_list()
+            self._x_LR_test, self._x_LR_test_aux = self.convert_input(input_LR_list, self.sensor_sampling_fre)
+            self._y_LR_test = ProcessorLRSI.convert_output(output_LR_list)
+            test_all_data_SI_list = ProcessorLRSI.clean_all_data(self.test_all_data_SI_list, self.sensor_sampling_fre)
+            input_SI_list, output_SI_list = test_all_data_SI_list.get_input_output_list()
+            self.test_sub_id_SI_list = test_all_data_SI_list.get_sub_id_list()
+            self.test_trial_id_SI_list = test_all_data_SI_list.get_trial_id_list()
+            self._x_SI_test, self._x_SI_test_aux = self.convert_input(input_SI_list, self.sensor_sampling_fre)
+            self._y_SI_test = ProcessorLRSI.convert_output(output_SI_list)
         else:
             # split the train, test set from the train data
             self._x_train, self._x_test, self._x_train_aux, self._x_test_aux, self._y_train, self._y_test =\
@@ -85,14 +104,14 @@ class ProcessorLR:
         for i_step in range(step_num):
             acc_gyr_data = input_all_list[i_step][:, 0:self.channel_num]
             for i_channel in range(self.channel_num):
-                channel_resampled = ProcessorLR.resample_channel(acc_gyr_data[:, i_channel], resample_len)
+                channel_resampled = ProcessorLRSI.resample_channel(acc_gyr_data[:, i_channel], resample_len)
                 step_input[i_step, :, i_channel] = channel_resampled[data_clip_start:data_clip_end]
                 step_len = acc_gyr_data.shape[0]
                 aux_input[i_step, 0] = step_len
                 strike_sample_num = np.where(input_all_list[i_step][:, -1] == 1)[0]
                 aux_input[i_step, 1] = strike_sample_num
 
-        aux_input = ProcessorLR.clean_aux_input(aux_input)
+        aux_input = ProcessorLRSI.clean_aux_input(aux_input)
         return step_input, aux_input
 
     @staticmethod
@@ -179,15 +198,15 @@ class ProcessorLR:
     def find_feature(self):
         train_all_data = AllSubData(self.train_sub_and_trials, self.param_name, self.sensor_sampling_fre, self.strike_off_from_IMU)
         train_all_data_list = train_all_data.get_all_data()
-        train_all_data_list = ProcessorLR.clean_all_data(train_all_data_list, self.sensor_sampling_fre)
+        train_all_data_list = ProcessorLRSI.clean_all_data(train_all_data_list, self.sensor_sampling_fre)
         input_list, output_list = train_all_data_list.get_input_output_list()
         x_train, feature_names = self.convert_input(input_list, self.sensor_sampling_fre)
-        y_train = ProcessorLR.convert_output(output_list)
+        y_train = ProcessorLRSI.convert_output(output_list)
         sub_id_list = train_all_data_list.get_sub_id_list()
         trial_id_list = train_all_data_list.get_trial_id_list()
-        ProcessorLR.gait_phase_and_correlation(input_list, y_train, channels=range(self.channel_num))
-        ProcessorLR.draw_correlation(x_train, y_train, sub_id_list, SUB_NAMES, feature_names)
-        ProcessorLR.draw_correlation(x_train, y_train, trial_id_list, TRIAL_NAMES, feature_names)
+        ProcessorLRSI.gait_phase_and_correlation(input_list, y_train, channels=range(self.channel_num))
+        ProcessorLRSI.draw_correlation(x_train, y_train, sub_id_list, SUB_NAMES, feature_names)
+        ProcessorLRSI.draw_correlation(x_train, y_train, trial_id_list, TRIAL_NAMES, feature_names)
         plt.show()
 
     @staticmethod
@@ -200,7 +219,7 @@ class ProcessorLR:
             input_array = np.zeros([sample_num, resample_len])
             for i_sample in range(sample_num):
                 channel_data = input_list[i_sample][:, i_channel]
-                channel_data_resampled = ProcessorLR.resample_channel(channel_data, resample_len)
+                channel_data_resampled = ProcessorLRSI.resample_channel(channel_data, resample_len)
                 input_array[i_sample, :] = channel_data_resampled
             pear_correlations = np.zeros([resample_len])
             for phase in range(resample_len):
