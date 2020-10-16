@@ -2,6 +2,8 @@
 Conv template, improvements:
 (1) add input such as subject height, step length, strike occurance time
 """
+import sys
+sys.path.append("SharedProcessors")
 import matplotlib.pyplot as plt
 from AllSubData import AllSubData
 import scipy.interpolate as interpo
