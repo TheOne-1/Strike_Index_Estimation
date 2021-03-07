@@ -39,52 +39,38 @@ class ProcessorLRSI:
         self.split_train = split_train
         self.do_input_norm = do_input_norm
         self.do_output_norm = do_output_norm
-        self.param_name_1 = 'LR'
-        self.param_name_2 = "SI"
         self.channel_num = 0
-        train_all_data_LR = AllSubData(self.train_sub_and_trials, imu_locations, self.param_name_1,
+        train_all_data = AllSubData(self.train_sub_and_trials, imu_locations,
                                        self.sensor_sampling_fre, self.strike_off_from_IMU)
-        self.train_all_data_LR_list = train_all_data_LR.get_all_data()
-        train_all_data_SI = AllSubData(self.train_sub_and_trials, imu_locations, self.param_name_2,
-                                       self.sensor_sampling_fre, self.strike_off_from_IMU)
-        self.train_all_data_SI_list = train_all_data_SI.get_all_data()
+        self.train_all_data_list = train_all_data.get_all_data()
         if test_sub_and_trials is not None:
-            test_all_data_LR = AllSubData(self.test_sub_and_trials, imu_locations, self.param_name_1,
+
+            test_all_data = AllSubData(self.test_sub_and_trials, imu_locations,
                                           self.sensor_sampling_fre, self.strike_off_from_IMU)
-            self.test_all_data_LR_list = test_all_data_LR.get_all_data()
-            test_all_data_SI = AllSubData(self.test_sub_and_trials, imu_locations, self.param_name_2,
-                                          self.sensor_sampling_fre, self.strike_off_from_IMU)
-            self.test_all_data_SI_list = test_all_data_SI.get_all_data()
+            self.test_all_data_list = test_all_data.get_all_data()
 
     def prepare_data(self):
-        train_all_data_LR_list = ProcessorLRSI.clean_all_data(self.train_all_data_LR_list, self.sensor_sampling_fre)
-        train_all_data_SI_list = ProcessorLRSI.clean_all_data(self.train_all_data_SI_list, self.sensor_sampling_fre)
-
-        input_LR_list, output_LR_list = train_all_data_LR_list.get_input_output_list()
-        input_SI_list, output_SI_list = train_all_data_SI_list.get_input_output_list()
-        self.channel_num = input_LR_list[0].shape[1] - 1
-        self._x_LR_train, self._x_LR_train_aux = self.convert_input(input_LR_list, self.sensor_sampling_fre)
-        self._y_LR_train = ProcessorLRSI.convert_output(output_LR_list)
-        self._x_SI_train, self._x_SI_train_aux = self.convert_input(input_SI_list, self.sensor_sampling_fre)
-        self._y_SI_train = ProcessorLRSI.convert_output(output_SI_list)
+        train_all_data_list = ProcessorLRSI.clean_all_data(self.train_all_data_list, self.sensor_sampling_fre)
+        input_list, output_list_LR, output_list_SI = train_all_data_list.get_input_output_list()
+        self.channel_num = input_list[0].shape[1] - 1
+        self._x_train, self._x_train_aux = self.convert_input(input_list, self.sensor_sampling_fre)
+        self._y_LR_train = ProcessorLRSI.convert_output(output_list_LR)
+        self._y_SI_train = ProcessorLRSI.convert_output(output_list_SI)
 
         if not self.split_train:
-            test_all_data_LR_list = ProcessorLRSI.clean_all_data(self.test_all_data_LR_list, self.sensor_sampling_fre)
-            input_LR_list, output_LR_list = test_all_data_LR_list.get_input_output_list()
-            self.test_sub_id_LR_list = test_all_data_LR_list.get_sub_id_list()
-            self.test_trial_id_LR_list = test_all_data_LR_list.get_trial_id_list()
-            self._x_LR_test, self._x_LR_test_aux = self.convert_input(input_LR_list, self.sensor_sampling_fre)
-            self._y_LR_test = ProcessorLRSI.convert_output(output_LR_list)
-            test_all_data_SI_list = ProcessorLRSI.clean_all_data(self.test_all_data_SI_list, self.sensor_sampling_fre)
-            input_SI_list, output_SI_list = test_all_data_SI_list.get_input_output_list()
-            self.test_sub_id_SI_list = test_all_data_SI_list.get_sub_id_list()
-            self.test_trial_id_SI_list = test_all_data_SI_list.get_trial_id_list()
-            self._x_SI_test, self._x_SI_test_aux = self.convert_input(input_SI_list, self.sensor_sampling_fre)
-            self._y_SI_test = ProcessorLRSI.convert_output(output_SI_list)
+            test_all_data_list = ProcessorLRSI.clean_all_data(self.test_all_data_list, self.sensor_sampling_fre)
+            input_list, output_list_LR, output_list_SI = test_all_data_list.get_input_output_list()
+            self.test_sub_id_list = test_all_data_list.get_sub_id_list()
+            self.test_trial_id_list = test_all_data_list.get_trial_id_list()
+            self._x_test, self._x_test_aux = self.convert_input(input_list, self.sensor_sampling_fre)
+            self._y_LR_test = ProcessorLRSI.convert_output(output_list_LR)
+            self._y_SI_test = ProcessorLRSI.convert_output(output_list_SI)
         else:
             # split the train, test set from the train data
-            self._x_train, self._x_test, self._x_train_aux, self._x_test_aux, self._y_train, self._y_test =\
-                train_test_split(self._x_train, self._x_train_aux, self._y_train, test_size=0.33)
+            print("This function is not working anymore.")
+            exit
+            # self._x_train, self._x_test, self._x_train_aux, self._x_test_aux, self._y_train, self._y_test =\
+            #     train_test_split(self._x_train, self._x_train_aux, self._y_train, test_size=0.33)
 
         # do input normalization
         if self.do_input_norm:
@@ -260,12 +246,12 @@ class ProcessorLRSI:
     @staticmethod
     def clean_all_data(all_sub_data_struct, sensor_sampling_fre):
         i_step = 0
-        input_list, output_list = all_sub_data_struct.get_input_output_list()
+        input_list, output_list_LR, output_list_SI = all_sub_data_struct.get_input_output_list()
         min_time_between_strike_off = int(sensor_sampling_fre * 0.15)
         while i_step < len(all_sub_data_struct):
             # delete steps without a valid loading rate
             strikes = np.where(input_list[i_step][:, -1] == 1)[0]
-            if np.max(output_list[i_step]) <= 0:
+            if np.max(output_list_LR[i_step]) <= 0:
                 all_sub_data_struct.pop(i_step)
 
             # delete steps without a valid strike time

@@ -5,12 +5,11 @@ import pandas as pd
 
 
 class OneTrialData:
-    def __init__(self, subject_name, trial_name, sensor_sampling_fre, param_name, static_data_df=None):
+    def __init__(self, subject_name, trial_name, sensor_sampling_fre, static_data_df=None):
         self._subject_name = subject_name
         self._trial_name = trial_name
         self._sensor_sampling_fre = sensor_sampling_fre
         self._static_data_df = static_data_df
-        self.param_name = param_name
         if sensor_sampling_fre == MOCAP_SAMPLE_RATE:
             self._side = 'l'       # 'l' or 'r'
             data_folder = '\\200Hz\\'
@@ -95,7 +94,7 @@ class OneTrialData:
         dcm_mat = np.array([vector_0, vector_1, vector_2])
         return dcm_mat
 
-    def get_lr_input_output(self, imu_locations, from_IMU, acc=True, gyr=True, mag=False):
+    def get_input_output(self, imu_locations, from_IMU, acc=True, gyr=True, mag=False):
         """
         GRFz: from strike to off
         acc and gyr: from off to off because information before strike might be useful
@@ -115,9 +114,10 @@ class OneTrialData:
             strikes, step_num = self.get_strikes()
         else:
             offs, strikes, step_num = self.get_offs_strikes_from_IMU(from_IMU)
-        lr_data = self.gait_param_df[self._side + "_" +self.param_name].values
+        lr_data = self.gait_param_df[self._side + "_LR"].values
+        SI_data = self.gait_param_df[self._side + "_strike_index"].values
         IMU_data = self.get_multi_IMU_data(imu_locations, acc, gyr, mag)
-        step_lr_data, step_imu_data = [], []
+        step_lr_data, step_SI_data, step_imu_data = [], [], []
         for i_step in range(step_num):
             strike_in_between = strikes[offs[i_step] < strikes]
             strike_in_between = strike_in_between[strike_in_between < offs[i_step+1]]
@@ -135,8 +135,9 @@ class OneTrialData:
             step_input = np.column_stack([IMU_data[step_start:step_end, :], strikes_array])
             step_imu_data.append(step_input)
             step_lr_data.append(lr_data[step_start:step_end])
-        step_imu_data, step_lr_data = self.check_step_input_output(step_imu_data, step_lr_data)
-        return step_imu_data, step_lr_data
+            step_SI_data.append(SI_data[step_start:step_end])
+        step_imu_data, step_lr_data, step_SI_data = self.check_step_input_output(step_imu_data, step_lr_data, step_SI_data)
+        return step_imu_data, step_lr_data, step_SI_data
 
     def get_strikes(self):
         strike_column = self._side + '_strikes'
@@ -189,7 +190,7 @@ class OneTrialData:
         return step_data_new
 
     @staticmethod
-    def check_step_input_output(step_input, step_output, up_diff_ratio=0.4, down_diff_ratio=0.3):
+    def check_step_input_output(step_input, step_output_LR, step_output_SI, up_diff_ratio=0.4, down_diff_ratio=0.3):
         step_num = len(step_input)
         step_lens = np.zeros([step_num])
         for i_step in range(step_num):
@@ -197,12 +198,13 @@ class OneTrialData:
         step_len_mean = np.mean(step_lens)
         acceptable_len_max = step_len_mean * (1+up_diff_ratio)
         acceptable_len_min = step_len_mean * (1-down_diff_ratio)
-        step_input_new, step_output_new = [], []
+        step_input_new, step_output_LR_new, step_output_SI_new = [], [], []
         for i_step in range(step_num):
             if acceptable_len_min < step_lens[i_step] < acceptable_len_max:
                 step_input_new.append(step_input[i_step])
-                step_output_new.append(step_output[i_step])
-        return step_input_new, step_output_new
+                step_output_LR_new.append(step_output_LR[i_step])
+                step_output_SI_new.append(step_output_SI[i_step])
+        return step_input_new, step_output_LR_new, step_output_SI_new 
 
 
 class OneTrialDataStatic(OneTrialData):

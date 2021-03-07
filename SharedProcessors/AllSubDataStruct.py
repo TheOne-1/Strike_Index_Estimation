@@ -9,19 +9,20 @@ class AllSubDataStruct:
     """
 
     def __init__(self):
-        self.__input_all_list, self.__output_all_list = [], []
+        self.__input_all_list, self.__output_LR_all_list, self.__output_SI_all_list = [], [], []
         self.__sub_id_list, self.__trial_id_list = [], []
         self.__data_len = 0
 
     def __len__(self):
         return self.__data_len
 
-    def append(self, input_list, output_list, subject_name, trial_name):
-        if len(input_list) != len(output_list):
+    def append(self, input_list, output_list_LR, output_list_SI,  subject_name, trial_name):
+        if len(input_list) != len(output_list_LR) or len(input_list) != len(output_list_SI) :
             raise ValueError('The length of input and output should be the same')
         self.__data_len += len(input_list)
         self.__input_all_list.extend(input_list)
-        self.__output_all_list.extend(output_list)
+        self.__output_LR_all_list.extend(output_list_LR)
+        self.__output_SI_all_list.extend(output_list_SI)
         subject_id = SUB_NAMES.index(subject_name)
         trial_id = TRIAL_NAMES.index(trial_name)
         for i_item in range(len(input_list)):
@@ -30,13 +31,14 @@ class AllSubDataStruct:
 
     def pop(self, index):
         self.__input_all_list.pop(index)
-        self.__output_all_list.pop(index)
+        self.__output_LR_all_list.pop(index)
+        self.__output_SI_all_list.pop(index)
         self.__sub_id_list.pop(index)
         self.__trial_id_list.pop(index)
         self.__data_len -= 1
 
     def get_input_output_list(self):
-        return self.__input_all_list, self.__output_all_list
+        return self.__input_all_list, self.__output_LR_all_list, self.__output_SI_all_list
 
     def get_sub_id_list(self):
         return self.__sub_id_list

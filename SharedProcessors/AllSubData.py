@@ -5,10 +5,9 @@ from AllSubDataStruct import AllSubDataStruct
 
 class AllSubData:
 
-    def __init__(self, sub_and_trials, imu_locations, param_name, sensor_sampling_fre, strike_off_from_IMU=False):
+    def __init__(self, sub_and_trials, imu_locations, sensor_sampling_fre, strike_off_from_IMU=False):
         self._sub_and_trials = sub_and_trials  # subject names and corresponding trials in a dict
         self._sub_names = sub_and_trials.keys()
-        self._param_name = param_name
         self._sensor_sampling_fre = sensor_sampling_fre
         self._strike_off_from_IMU = strike_off_from_IMU
         self.imu_locations = imu_locations
@@ -28,11 +27,11 @@ class AllSubData:
             for trial_name in trials:
                 if 'nike' in trial_name:
                     trial_processor = OneTrialData(subject_name, trial_name, self._sensor_sampling_fre,
-                                                   self._param_name, static_data_df=static_nike_df)
+                                                    static_data_df=static_nike_df)
                 else:
                     trial_processor = OneTrialData(subject_name, trial_name, self._sensor_sampling_fre,
-                                                   self._param_name, static_data_df=static_mini_df)
-                trial_input, trial_output = trial_processor.get_lr_input_output(
+                                                   static_data_df=static_mini_df)
+                trial_input, trial_output_LR, trial_output_SI = trial_processor.get_input_output(
                     self.imu_locations, self._strike_off_from_IMU)
-                all_sub_data_struct.append(trial_input, trial_output, subject_name, trial_name)
+                all_sub_data_struct.append(trial_input, trial_output_LR, trial_output_SI, subject_name, trial_name)
         return all_sub_data_struct
