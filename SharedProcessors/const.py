@@ -48,8 +48,7 @@ COP_DIFFERENCE = np.array([279.4, 784, 0])  # reset coordinate difference
 COLORS = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'gray', 'rosybrown', 'firebrick', 'olive', 'darkgreen',
           'slategray', 'navy', 'slateblue', 'm', 'indigo', 'maroon', 'peru', 'seagreen']
 
-# '190513OuYangjue', '190513YangYicheng', '190514QiuYue', '190514XieJie', '190517FuZhenzhen',
-#              '190517ZuanYaqian', '190518FuZhinan', '190518MouRongzi'
+
 
 RUNNING_TRIALS = ('nike baseline 24', 'nike SI 24', 'nike SR 24', 'nike baseline 28', 'nike SI 28', 'nike SR 28',
                   'mini baseline 24', 'mini SI 24', 'mini SR 24', 'mini baseline 28', 'mini SI 28', 'mini SR 28')
@@ -73,12 +72,27 @@ SUB_AND_TRIALS = {'190521GongChangyang': TRIAL_NAMES, '190523ZengJia': TRIAL_NAM
                   # trial 6 and 11 was abandoned because Haisheng's sensor was broken
                   '190510HeMing': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:6] + TRIAL_NAMES[7:11] + TRIAL_NAMES[12:],
                   '190511ZhuJiayi':  TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
-                  '190513YangYicheng':  TRIAL_NAMES[0:3] + TRIAL_NAMES[4:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
                   '190514QiuYue':  TRIAL_NAMES[0:4] + TRIAL_NAMES[5:8] + TRIAL_NAMES[9:],
                   '190514XieJie':  TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[5:9] + TRIAL_NAMES[10:],
-                  '190517FuZhenzhen':  TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[6:8] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
-                  '190513OuYangjue':  TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
+                  '190517FuZhenzhen':  TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[6:8] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:]
                   }
+# SUB_AND_TRIALS = {'190521GongChangyang': TRIAL_NAMES, '190523ZengJia': TRIAL_NAMES,
+#                   '190522QinZhun': TRIAL_NAMES, '190522YangCan': TRIAL_NAMES, '190521LiangJie': TRIAL_NAMES,
+#                   '190517ZhangYaqian': TRIAL_NAMES, '190518MouRongzi': TRIAL_NAMES, '190518FuZhinan': TRIAL_NAMES,
+#                   '190522SunDongxiao': TRIAL_NAMES,
+#                   '190414WangDianxin': TRIAL_NAMES[0:4] + TRIAL_NAMES[7:8] + TRIAL_NAMES[9:12] + TRIAL_NAMES[13:],
+#                   '190423LiuSensen': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:14],
+#                   '190424XuSen': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:4] + TRIAL_NAMES[6:8] + TRIAL_NAMES[10:],
+#                   '190426YuHongzhe': TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[5:6] + TRIAL_NAMES[7:8] + TRIAL_NAMES[9:11] + TRIAL_NAMES[13:],
+#                   # trial 6 and 11 was abandoned because Haisheng's sensor was broken
+#                   '190510HeMing': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:6] + TRIAL_NAMES[7:11] + TRIAL_NAMES[12:],
+#                   '190511ZhuJiayi':  TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
+#                   '190513YangYicheng':  TRIAL_NAMES[0:3] + TRIAL_NAMES[4:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
+#                   '190514QiuYue':  TRIAL_NAMES[0:4] + TRIAL_NAMES[5:8] + TRIAL_NAMES[9:],
+#                   '190514XieJie':  TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[5:9] + TRIAL_NAMES[10:],
+#                   '190517FuZhenzhen':  TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[6:8] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
+#                   '190513OuYangjue':  TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
+#                   }
 
 SUB_NAMES = tuple(SUB_AND_TRIALS.keys())
 
@@ -123,7 +137,15 @@ FONT_SIZE = 18
 FONT_DICT = {'fontsize': FONT_SIZE, 'fontname': 'DejaVu Sans'}
 FONT_DICT_SMALL = {'fontsize': 16, 'fontname': 'DejaVu Sans'}
 LINE_WIDTH = 2
+MININ_SHOE_LENGTHS = {'190521GongChangyang': 262, '190523ZengJia': 252, '190522QinZhun': 252,
+                      '190522YangCan': 252, '190521LiangJie': 232, '190517ZhangYaqian': 252,
+                      '190518MouRongzi': 252, '190518FuZhinan': 252, '190522SunDongxiao': 262,
+                      '190510HeMing': 252}
 
+TRAD_SHOE_LENGTHS = {'190521GongChangyang': 302, '190523ZengJia': 288, '190522QinZhun': 288,
+                     '190522YangCan': 266, '190521LiangJie': 254, '190517ZhangYaqian': 266,
+                     '190518MouRongzi': 266, '190518FuZhinan': 266, '190522SunDongxiao': 302,
+                     '190510HeMing': 266}
 
-
+GOOD_SUBS = ['190521GongChangyang', '190523ZengJia', '190522QinZhun', '190522YangCan', '190521LiangJie', '190517ZhangYaqian', '190518MouRongzi', '190518FuZhinan', '190522SunDongxiao', '190510HeMing']
 

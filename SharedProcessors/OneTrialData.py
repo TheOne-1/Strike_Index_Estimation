@@ -2,6 +2,9 @@ from const import PROCESSED_DATA_PATH, MOCAP_SAMPLE_RATE, ROTATION_VIA_STATIC_CA
     SPECIFIC_CALI_MATRIX, TRIAL_START_BUFFER, FILTER_WIN_LEN
 import numpy as np
 import pandas as pd
+# import modin.pandas as pd
+# import ray
+# ray.init()
 
 
 class OneTrialData:
@@ -19,13 +22,15 @@ class OneTrialData:
         # initialize the dataframe of gait data, including force plate, marker and IMU data
         gait_data_path = PROCESSED_DATA_PATH + '\\' + subject_name + data_folder + trial_name + '.csv'
         self.gait_data_df = pd.read_csv(gait_data_path, index_col=False)
+        self.gait_data_df.reset_index(inplace=True)
         # initialize the dataframe of gait parameters, including loading rate, strike index, ...
         gait_param_path = PROCESSED_DATA_PATH + '\\' + subject_name + data_folder + 'param_of_' + trial_name + '.csv'
 
-        buffer_sample_num = self._sensor_sampling_fre * TRIAL_START_BUFFER
-        self.gait_data_df = self.gait_data_df.loc[buffer_sample_num:, :]        # skip the first several hundred data
+        buffer_sample_num = int(self._sensor_sampling_fre * TRIAL_START_BUFFER)
+        self.gait_data_df = self.gait_data_df.loc[buffer_sample_num: , :]        # skip the first several hundred data
         if static_data_df is not None:
             self.gait_param_df = pd.read_csv(gait_param_path, index_col=False)
+            self.gait_param_df.reset_index(inplace=True)
             self.gait_param_df = self.gait_param_df.loc[buffer_sample_num:, :]
 
     def get_one_IMU_data(self, IMU_location, acc=True, gyr=False, mag=False):
