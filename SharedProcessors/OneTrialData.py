@@ -24,7 +24,7 @@ class OneTrialData:
         self.gait_data_df = pd.read_csv(gait_data_path, index_col=False)
         self.gait_data_df.reset_index(inplace=True)
         # initialize the dataframe of gait parameters, including loading rate, strike index, ...
-        gait_param_path = PROCESSED_DATA_PATH + '\\' + subject_name + data_folder + 'param_of_' + trial_name + '.csv'
+        gait_param_path = PROCESSED_DATA_PATH + '\\' + subject_name + data_folder + 'param_of_' + trial_name + '_si_paper.csv'
 
         buffer_sample_num = int(self._sensor_sampling_fre * TRIAL_START_BUFFER)
         self.gait_data_df = self.gait_data_df.loc[buffer_sample_num: , :]        # skip the first several hundred data
@@ -141,6 +141,14 @@ class OneTrialData:
             step_imu_data.append(step_input)
             step_lr_data.append(lr_data[step_start:step_end])
             step_SI_data.append(SI_data[step_start:step_end])
+        # for debug
+        # import matplotlib.pyplot as plt
+        # plt.figure()
+        # for i_step in range(step_num):
+        #     # plt.plot(step_imu_data[i_step][:, 0])
+        #     plt.plot(step_SI_data[i_step])
+        # plt.show()
+
         step_imu_data, step_lr_data, step_SI_data = self.check_step_input_output(step_imu_data, step_lr_data, step_SI_data)
         return step_imu_data, step_lr_data, step_SI_data
 

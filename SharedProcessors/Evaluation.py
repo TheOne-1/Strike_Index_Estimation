@@ -56,21 +56,19 @@ class Evaluation:
         plt.ylabel('predicted value')
 
     def evaluate_nn(self, model):
-        verbosity = 2
-        # train NN
+        verbosity = 1
         # lr = learning rate, the other params are default values
         optimizer = optimizers.Nadam(lr=0.0005, beta_1=0.9, beta_2=0.999, epsilon=1e-08, schedule_decay=0.004)
         model.compile(loss='mse', optimizer=optimizer,metrics=["mse"])
         # model.compile(loss='categorical_crossentropy', optimizer=optimizer)
         # LR_callback = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=10, min_lr=.0001)
-        
         # val_loss = validation loss, patience is the tolerance
         early_stopping_patience = 50
         early_stopping = EarlyStopping(monitor='val_loss', patience=early_stopping_patience)
         # epochs is the maximum training round, validation split is the size of the validation set,
         # callback stops the training if the validation was not approved
         batch_size = 128  # the size of data that be trained together
-        epoch_num = 1000
+        epoch_num = 1000      # !!!
         if self._x_train_aux is not None:
             tic = time.time()
             r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
@@ -97,12 +95,6 @@ class Evaluation:
         return y_pred
 
     def HyperparameterTuneNN(self,test_sub):
-        # train NN
-        # lr = learning rate, the other params are default values
-        # main_input_shape = self._x_train.shape
-        
-        
-        # val_loss = validation loss, patience is the tolerance
         early_stopping_patience = 30
         name = "BayO_SI"
         early_stopping = EarlyStopping(monitor='val_loss', patience=early_stopping_patience)
@@ -126,36 +118,10 @@ class Evaluation:
             best_model = tuner.hypermodel.build(best_hp)
             best_model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
                               batch_size=batch_size, epochs=epoch_num, validation_split=0.2,
-                              verbose=2,callbacks=[early_stopping])            
+                              verbose=2,callbacks=[early_stopping])
             y_pred = best_model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
                                    batch_size=batch_size).ravel()
-
-
-
-
-            # r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-            #               batch_size=batch_size, epochs=epoch_num, validation_split=0.2, callbacks=[early_stopping],
-            #               verbose=2)
-            # n_epochs = len(r.history['loss'])
-            # retrain the model if the model did not converge
-            # while n_epochs < early_stopping_patience + 7:
-            #     print('Epcohs number was {num}, reset weights and retrain'.format(num=n_epochs))
-            #     model.reset_states()
-            #     r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-            #                   batch_size=batch_size, epochs=epoch_num, validation_split=0.2, callbacks=[early_stopping],
-            #                   verbose=2)
-            #     n_epochs = len(r.history['loss'])
-            # y_pred = model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
-            #                        batch_size=batch_size).ravel()
-            # print('Final model, loss = {loss}, epochs = {epochs}'.format(loss=r.history['loss'][-1], epochs=len())
-        # else:
-        #     print("This is not implemented here")
-        #     exit()
-        #     model.fit(self._x_train, self._y_train, batch_size=batch_size,
-        #               epochs=epoch_num, validation_split=0.2, callbacks=[early_stopping])
-        #     y_pred = model.predict(self._x_test, batch_size=batch_size).ravel()
         return y_pred , best_hp.values
-        # return y_pred 
 
     @staticmethod
     def plot_nn_result(y_true, y_pred, title=''):
@@ -242,22 +208,19 @@ class Evaluation:
 
     @staticmethod
     def insert_prediction_result(predict_result_df, sub_name, pearson_coeff, RMSE, mean_error, hp_best):
-        new_data = dict(zip(predict_result_df.columns.values, [sub_name, pearson_coeff, RMSE[0], mean_error] + list(hp_best.values()))) 
+        new_data = dict(zip(predict_result_df.columns.values, [sub_name, pearson_coeff, RMSE[0], mean_error] + list(hp_best.values())))
         predict_result_df = predict_result_df.append(new_data, ignore_index=True)
         return predict_result_df
 
     @staticmethod
-    def export_prediction_result(predict_result_df,name):
-        file_path = 'result_conclusion/predict_result_conclusion_{}.csv'.format(name)
-        i_file = 0
-        while os.path.isfile(file_path):
-            i_file += 1
-            file_path = 'result_conclusion/predict_result_conclusion_{}_{}.csv'.format(name, i_file)
+    def export_prediction_result(predict_result_df, test_date, name):
+        file_path = 'result_conclusion/{}/trial_summary/{}.csv'.format(test_date, name)
         predict_result_df.to_csv(file_path, index=False)
-    
-    def random_undersampling(self):
-        self._x_train 
-        self._y_train 
-        self._x_train_aux 
+
+    @staticmethod
+    def export_predicted_values(predicted_value_df, test_date, test_name):
+        predicted_value_df.columns = ['subject id', 'trial id', 'true LR', 'predicted LR']
+        file_path = 'result_conclusion/' + test_date + '/step_result/' + test_name + '.csv'
+        predicted_value_df.to_csv(file_path, index=False)
 
 

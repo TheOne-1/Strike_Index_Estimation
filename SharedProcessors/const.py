@@ -1,10 +1,6 @@
 import numpy as np
 import copy
 
-TRIAL_NAMES = ['nike static', 'nike baseline 24', 'nike SI 24', 'nike SR 24', 'nike baseline 28', 'nike SI 28',
-               'nike SR 28', 'mini static', 'mini baseline 24', 'mini SI 24', 'mini SR 24', 'mini baseline 28',
-               'mini SI 28', 'mini SR 28']
-
 # in Haisheng sensor's column names, x and y are switched to make it the same as Xsens column
 COLUMN_NAMES_HAISHENG = ['hour', 'minute', 'second', 'millisecond', 'acc_y', 'acc_x', 'acc_z', 'gyr_y', 'gyr_x',
                          'gyr_z', 'mag_y', 'mag_x', 'mag_z']
@@ -35,11 +31,12 @@ MOCAP_SAMPLE_RATE = 200
 PLATE_SAMPLE_RATE = 1000
 STATIC_STANDING_PERIOD = 10  # unit: second
 
-with open('configuration.txt', 'r') as config:
+with open('../configuration.txt', 'r') as config:
     RAW_DATA_PATH = config.readline()
 
 path_index = RAW_DATA_PATH.rfind('\\', 0, len(RAW_DATA_PATH) - 2)
-PROCESSED_DATA_PATH = RAW_DATA_PATH
+MAIN_DATA_PATH = RAW_DATA_PATH[:path_index]
+PROCESSED_DATA_PATH = RAW_DATA_PATH[:path_index] + '\\ProcessedData'
 
 LOADING_RATE_NORMALIZATION = True
 
@@ -48,72 +45,21 @@ COP_DIFFERENCE = np.array([279.4, 784, 0])  # reset coordinate difference
 COLORS = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'gray', 'rosybrown', 'firebrick', 'olive', 'darkgreen',
           'slategray', 'navy', 'slateblue', 'm', 'indigo', 'maroon', 'peru', 'seagreen']
 
-
-
-RUNNING_TRIALS = ('nike baseline 24', 'nike SI 24', 'nike SR 24', 'nike baseline 28', 'nike SI 28', 'nike SR 28',
-                  'mini baseline 24', 'mini SI 24', 'mini SR 24', 'mini baseline 28', 'mini SI 28', 'mini SR 28')
-
-NIKE_TRIALS = ('nike baseline 24', 'nike SI 24', 'nike SR 24', 'nike baseline 28', 'nike SI 28', 'nike SR 28')
-
-MINI_TRIALS = ('mini baseline 24', 'mini SI 24', 'mini SR 24', 'mini baseline 28', 'mini SI 28', 'mini SR 28')
-
-_24_TRIALS = ('nike baseline 24', 'nike SI 24', 'nike SR 24', 'mini baseline 24', 'mini SI 24', 'mini SR 24')
-
-_28_TRIALS = ('nike baseline 28', 'nike SI 28', 'nike SR 28', 'mini baseline 28', 'mini SI 28', 'mini SR 28')
+TRIAL_NAMES = ['nike static', 'nike baseline 24', 'nike SI 24', 'nike SR 24', 'nike baseline 28', 'nike SI 28',
+               'nike SR 28', 'mini static', 'mini baseline 24', 'mini SI 24', 'mini SR 24', 'mini baseline 28',
+               'mini SI 28', 'mini SR 28']
+SI_TRIALS = ('nike SI 24', 'nike SI 28', 'mini SI 24', 'mini SI 28')
 
 SUB_AND_TRIALS = {'190521GongChangyang': TRIAL_NAMES, '190523ZengJia': TRIAL_NAMES,
                   '190522QinZhun': TRIAL_NAMES, '190522YangCan': TRIAL_NAMES, '190521LiangJie': TRIAL_NAMES,
                   '190517ZhangYaqian': TRIAL_NAMES, '190518MouRongzi': TRIAL_NAMES, '190518FuZhinan': TRIAL_NAMES,
-                  '190522SunDongxiao': TRIAL_NAMES,
-                  '190414WangDianxin': TRIAL_NAMES[0:4] + TRIAL_NAMES[7:8] + TRIAL_NAMES[9:12] + TRIAL_NAMES[13:],
-                  '190423LiuSensen': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:14],
-                  '190424XuSen': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:4] + TRIAL_NAMES[6:8] + TRIAL_NAMES[10:],
-                  '190426YuHongzhe': TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[5:6] + TRIAL_NAMES[7:8] + TRIAL_NAMES[9:11] + TRIAL_NAMES[13:],
-                  # trial 6 and 11 was abandoned because Haisheng's sensor was broken
-                  '190510HeMing': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:6] + TRIAL_NAMES[7:11] + TRIAL_NAMES[12:],
-                  '190511ZhuJiayi':  TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
-                  '190514QiuYue':  TRIAL_NAMES[0:4] + TRIAL_NAMES[5:8] + TRIAL_NAMES[9:],
-                  '190514XieJie':  TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[5:9] + TRIAL_NAMES[10:],
-                  '190517FuZhenzhen':  TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[6:8] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:]
-                  }
-# SUB_AND_TRIALS = {'190521GongChangyang': TRIAL_NAMES, '190523ZengJia': TRIAL_NAMES,
-#                   '190522QinZhun': TRIAL_NAMES, '190522YangCan': TRIAL_NAMES, '190521LiangJie': TRIAL_NAMES,
-#                   '190517ZhangYaqian': TRIAL_NAMES, '190518MouRongzi': TRIAL_NAMES, '190518FuZhinan': TRIAL_NAMES,
-#                   '190522SunDongxiao': TRIAL_NAMES,
-#                   '190414WangDianxin': TRIAL_NAMES[0:4] + TRIAL_NAMES[7:8] + TRIAL_NAMES[9:12] + TRIAL_NAMES[13:],
-#                   '190423LiuSensen': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:14],
-#                   '190424XuSen': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:4] + TRIAL_NAMES[6:8] + TRIAL_NAMES[10:],
-#                   '190426YuHongzhe': TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[5:6] + TRIAL_NAMES[7:8] + TRIAL_NAMES[9:11] + TRIAL_NAMES[13:],
-#                   # trial 6 and 11 was abandoned because Haisheng's sensor was broken
-#                   '190510HeMing': TRIAL_NAMES[0:2] + TRIAL_NAMES[3:6] + TRIAL_NAMES[7:11] + TRIAL_NAMES[12:],
-#                   '190511ZhuJiayi':  TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
-#                   '190513YangYicheng':  TRIAL_NAMES[0:3] + TRIAL_NAMES[4:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
-#                   '190514QiuYue':  TRIAL_NAMES[0:4] + TRIAL_NAMES[5:8] + TRIAL_NAMES[9:],
-#                   '190514XieJie':  TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[5:9] + TRIAL_NAMES[10:],
-#                   '190517FuZhenzhen':  TRIAL_NAMES[0:1] + TRIAL_NAMES[3:4] + TRIAL_NAMES[6:8] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
-#                   '190513OuYangjue':  TRIAL_NAMES[0:2] + TRIAL_NAMES[3:5] + TRIAL_NAMES[6:9] + TRIAL_NAMES[10:12] + TRIAL_NAMES[13:],
-#                   }
+                  '190522SunDongxiao': TRIAL_NAMES, '190513YangYicheng':  TRIAL_NAMES}
 
 SUB_NAMES = tuple(SUB_AND_TRIALS.keys())
+SUB_AND_SI_TRIALS = {sub_name: SI_TRIALS for sub_name in SUB_NAMES}
 
-SUB_AND_RUNNING_TRIALS = copy.deepcopy(SUB_AND_TRIALS)
-for key in SUB_AND_RUNNING_TRIALS.keys():
-    if 'mini static' in SUB_AND_RUNNING_TRIALS[key]:
-        SUB_AND_RUNNING_TRIALS[key].remove('mini static')
-    if 'nike static' in SUB_AND_RUNNING_TRIALS[key]:
-        SUB_AND_RUNNING_TRIALS[key].remove('nike static')
-
-SUB_AND_NIKE_TRIALS = copy.deepcopy(SUB_AND_RUNNING_TRIALS)
-for key in SUB_AND_NIKE_TRIALS.keys():
-    for trial_name in SUB_AND_NIKE_TRIALS[key]:
-        if 'mini' in trial_name:
-            SUB_AND_NIKE_TRIALS[key].remove(trial_name)
-
-SUB_AND_MINI_TRIALS = copy.deepcopy(SUB_AND_RUNNING_TRIALS)
-for key in SUB_AND_MINI_TRIALS.keys():
-    for trial_name in SUB_AND_MINI_TRIALS[key]:
-        if 'nike' in trial_name:
-            SUB_AND_MINI_TRIALS[key].remove(trial_name)
+SUB_AND_NIKE_SI_TRIALS = {sub_name: ('nike SI 24', 'nike SI 28') for sub_name in SUB_NAMES}
+SUB_AND_MINI_SI_TRIALS = {sub_name: ('mini SI 24', 'mini SI 28') for sub_name in SUB_NAMES}
 
 # The orientation of left foot xsens sensor was wrong
 XSENS_ROTATION_CORRECTION_NIKE = {
@@ -140,12 +86,12 @@ LINE_WIDTH = 2
 MININ_SHOE_LENGTHS = {'190521GongChangyang': 262, '190523ZengJia': 252, '190522QinZhun': 252,
                       '190522YangCan': 252, '190521LiangJie': 232, '190517ZhangYaqian': 252,
                       '190518MouRongzi': 252, '190518FuZhinan': 252, '190522SunDongxiao': 262,
-                      '190510HeMing': 252}
+                      '190510HeMing': 252, '190513YangYicheng': 262}
 
 TRAD_SHOE_LENGTHS = {'190521GongChangyang': 302, '190523ZengJia': 288, '190522QinZhun': 288,
                      '190522YangCan': 266, '190521LiangJie': 254, '190517ZhangYaqian': 266,
                      '190518MouRongzi': 266, '190518FuZhinan': 266, '190522SunDongxiao': 302,
-                     '190510HeMing': 266}
+                     '190510HeMing': 266, '190513YangYicheng': 302}
 
 GOOD_SUBS = ['190521GongChangyang', '190523ZengJia', '190522QinZhun', '190522YangCan', '190521LiangJie', '190517ZhangYaqian', '190518MouRongzi', '190518FuZhinan', '190522SunDongxiao', '190510HeMing']
 
