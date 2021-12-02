@@ -1,36 +1,35 @@
 from strike_index_tian.ProcessorSICrossVali import ProcessorSICrossVali
-from SharedProcessors.const import SUB_AND_SI_TRIALS
+from SharedProcessors.const import SUB_AND_SI_TRIALS, SI_TRIALS
 import copy
 import tensorflow as tf
 import pandas as pd
 import itertools
-
 import os
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+tf.enable_eager_execution()
 IMU_locations = ['l_foot']
 
 train = copy.deepcopy(SUB_AND_SI_TRIALS)
 
-train = {'190521GongChangyang': SUB_AND_SI_TRIALS['190521GongChangyang'],
-         '190513YangYicheng': SUB_AND_SI_TRIALS['190513YangYicheng']}
+# train = {'190521GongChangyang': SI_TRIALS,
+#          '190513YangYicheng': SI_TRIALS,
+#          '190522SunDongxiao': SI_TRIALS}
 
 
 def regular_run(basename):
-    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1, do_output_norm=False,
+    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1,
                                            do_input_norm=True, tune_hp=False)
-    trials = [2, 5, 9, 12]
     print("starting regular run")
     trial_name = basename
     avg_correlation = my_SI_processor.prepare_data_cross_vali(
-        pre_samples=12, post_samples=20, test_name=trial_name, trials=trials, train_num=len(train) - 1)
+        pre_samples=12, post_samples=20, test_name=trial_name, train_num=len(train) - 1)
     print(avg_correlation)
 
 
 def subject_sufficiently(basename):
-    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1, do_output_norm=False,
-                                           do_input_norm=True, tune_hp=False)
-    trials = [2, 5, 9, 12]
+    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1,
+                                           do_input_norm=True)
     print("starting subject sufficiently")
     for j in range(7, 11):
         SS_corr_DF = pd.DataFrame(columns=["correlation", "Train_num"])
@@ -38,7 +37,7 @@ def subject_sufficiently(basename):
             trial_name = f"{basename}_{j}_training_with_{i}"
             print(trial_name)
             avg_correlation = my_SI_processor.prepare_data_cross_vali(pre_samples=12, post_samples=20,
-                                                                      test_name=trial_name, trials=trials, train_num=i)
+                                                                      test_name=trial_name, train_num=i)
             new_data = {"correlation": avg_correlation, "Train_num": i}
             SS_corr_DF = SS_corr_DF.append(new_data, ignore_index=True)
             print(f"For number of training sub = {i}, {avg_correlation}")
@@ -46,9 +45,8 @@ def subject_sufficiently(basename):
 
 
 def window_opt(basename):
-    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1, do_output_norm=False,
-                                           do_input_norm=True, tune_hp=False)
-    trials = [2, 5, 9, 12]
+    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1,
+                                           do_input_norm=True)
     print("starting window opt")
     basis_vector = [2, 4, 6, 8, 10, 12, 16, 18, 20, 24]
     samples = [x for x in itertools.product(basis_vector, basis_vector)]
@@ -58,7 +56,7 @@ def window_opt(basename):
         print(f"Working with {pre_sample}, {post_sample}, which is {i + 1} of {number_of_trials}")
         trial_name = f"{pre_sample}_{post_sample}_{basename}"
         avg_correlation = my_SI_processor.prepare_data_cross_vali(pre_samples=pre_sample, post_samples=post_sample,
-                                                                  test_name=trial_name, trials=trials)
+                                                                  test_name=trial_name)
         new_data = {"correlation": avg_correlation, "start": pre_sample, "end": post_sample}
         end_start_corr_DF = end_start_corr_DF.append(new_data, ignore_index=True)
         print(f"For {pre_sample} and {post_sample}, {avg_correlation}")
@@ -67,8 +65,8 @@ def window_opt(basename):
 
 
 def four_cond(basename):
-    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1, do_output_norm=False,
-                                           do_input_norm=True, tune_hp=False)
+    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1,
+                                           do_input_norm=True)
     print("starting four cond")
     pre_samples = 12
     post_samples = 20
@@ -100,20 +98,18 @@ def four_cond(basename):
 
 
 def hp_opt(trial_name):
-    trials = [2, 5, 9, 12]
     print("starting hp opt")
     pre_samples = 12
     post_samples = 20
-    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=2, do_output_norm=False,
-                                           do_input_norm=True, hp_tune=True)
+    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=2,
+                                           do_input_norm=True, tune_hp=True)
     avg_correlation = my_SI_processor.prepare_data_cross_vali(pre_samples=pre_samples, post_samples=post_samples,
-                                                              test_name=trial_name, trials=trials,
-                                                              train_num=len(train) - 1)
+                                                              test_name=trial_name, train_num=len(train) - 1)
 
 
 def cross_test(basename):
-    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1, do_output_norm=False,
-                                           do_input_norm=True, tune_hp=False)
+    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1,
+                                           do_input_norm=True)
     print("starting cross test")
     pre_samples = 12
     post_samples = 20
@@ -150,7 +146,7 @@ def cross_test(basename):
 
 
 if __name__ == "__main__":
-    date = '211201'
+    date = '211130_ZAS_BL'
     regular_run("main")
     # four_cond("main")
     # cross_test("main")

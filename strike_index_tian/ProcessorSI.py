@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 from AllSubData import AllSubData
 import scipy.interpolate as interpo
 from const import SUB_NAMES, COLORS, DATA_COLUMNS_XSENS, MOCAP_SAMPLE_RATE, TRIAL_NAMES
-import scipy.stats as stats
-from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.callbacks import TensorBoard, ReduceLROnPlateau
 from Evaluation import Evaluation
 from keras.layers import *
 from tensorflow_core.python.keras.models import Model
@@ -15,11 +14,13 @@ from tensorflow_core.python.keras import regularizers
 from sklearn.model_selection import train_test_split
 from const import TRIAL_NAMES
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+import os
 
 
 class ProcessorSI:
     def __init__(self, train_sub_and_trials, test_sub_and_trials, imu_locations, strike_off_from_IMU=False,
-                 split_train=False, do_input_norm=True, do_output_norm=False, start_ratio=.5, end_ratio=.75, pre_samples=5, post_samples=5, tune_hp=False):
+                 split_train=False, do_input_norm=True, start_ratio=.5, end_ratio=.75, pre_samples=5, post_samples=5, tune_hp=False):
         """
 
         :param train_sub_and_trials:
@@ -28,7 +29,6 @@ class ProcessorSI:
         :param strike_off_from_IMU: 0 for from plate, 1 for filtfilt, 2 for lfilter
         :param split_train:
         :param do_input_norm:
-        :param do_output_norm:
         """
         self.train_sub_and_trials = train_sub_and_trials
         self.test_sub_and_trials = test_sub_and_trials
@@ -37,7 +37,6 @@ class ProcessorSI:
         self.strike_off_from_IMU = strike_off_from_IMU
         self.split_train = split_train
         self.do_input_norm = do_input_norm
-        self.do_output_norm = do_output_norm
         self.channel_num = 0
         self.param_name = 'SI'
         self.start_ratio = start_ratio
@@ -74,9 +73,6 @@ class ProcessorSI:
         # do input normalization
         if self.do_input_norm:
             self.norm_input()
-
-        if self.do_output_norm:
-            self.norm_output()
 
     # convert the input from list to ndarray
     def convert_input_samples(self, input_all_list, sampling_fre):
@@ -208,14 +204,12 @@ class ProcessorSI:
     def norm_input(self):
         channel_num = self._x_train.shape[2]
         # save input scalar parameter
-        self.main_max_vals,  self.main_min_vals = [], []
+        # self.main_max_vals, self.main_min_vals = [], []
         for i_channel in range(channel_num):
-            max_val = np.max(self._x_train[:, :, i_channel]) * 0.99
-            min_val = np.min(self._x_train[:, :, i_channel]) * 0.99
-            self._x_train[:, :, i_channel] = (self._x_train[:, :, i_channel] - min_val) / (max_val - min_val)
-            self._x_test[:, :, i_channel] = (self._x_test[:, :, i_channel] - min_val) / (max_val - min_val)
-            self.main_max_vals.append(max_val)
-            self.main_min_vals.append(min_val)
+            mean_val = np.mean(self._x_train[:, :, i_channel])
+            std_val = np.std(self._x_train[:, :, i_channel])
+            self._x_train[:, :, i_channel] = (self._x_train[:, :, i_channel] - mean_val) / std_val
+            self._x_test[:, :, i_channel] = (self._x_test[:, :, i_channel] - mean_val) / std_val
 
         if hasattr(self, '_x_train_aux'):
             # MinMaxScaler is more suitable because StandardScalar will make the input greatly differ from each other
@@ -224,28 +218,3 @@ class ProcessorSI:
             self._x_test_aux = aux_input_scalar.transform(self._x_test_aux)
             self.aux_max_vals = aux_input_scalar.data_max_.tolist()
             self.aux_min_vals = aux_input_scalar.data_min_.tolist()
-
-    def norm_output(self):
-        self.output_minmax_scalar = MinMaxScaler(feature_range=(1, 3))
-        self._y_train = self._y_train.reshape(-1, 1)
-        self._y_train = self.output_minmax_scalar.fit_transform(self._y_train)
-        self.result_max_vals = self.output_minmax_scalar.data_max_[0]
-        self.result_min_vals = self.output_minmax_scalar.data_min_[0]
-
-    def norm_output_reverse(self, output):
-        output = output.reshape(-1, 1)
-        output = self.output_minmax_scalar.inverse_transform(output)
-        return output.reshape(-1,)
-
-    def tune_nn_model(self, test_sub):
-        my_evaluator = Evaluation(self._x_train, self._x_test, self._y_train, self._y_test, self._x_train_aux,
-                                  self._x_test_aux)
-        y_pred, hp_best = my_evaluator.HyperparameterTuneNN(test_sub)
-        # y_pred = my_evaluator.HyperparameterTuneNN(test_sub)
-        if self.do_output_norm:
-            y_pred = self.norm_output_reverse(y_pred)
-        return y_pred, hp_best
-
-
-
-

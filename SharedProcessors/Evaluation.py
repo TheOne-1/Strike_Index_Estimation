@@ -4,19 +4,16 @@ from sklearn import metrics
 from sklearn.metrics import r2_score, mean_squared_error
 from numpy import sqrt
 from scipy.stats import pearsonr
-from tensorflow.keras import optimizers
 from tensorflow.keras.callbacks import EarlyStopping, TensorBoard, ReduceLROnPlateau
 from const import COLORS, SUB_NAMES
 from tensorflow.keras import backend as K
 import pandas as pd
 import os
 from kerastuner.tuners import BayesianOptimization, RandomSearch, Hyperband
-from kerastuner import HyperParameter as hp
 import time
 from MakeModel import define_model
 import tensorflow as tf
 from pearsonr import pearson_r
-from os.path import normpath, join
 
 
 class Evaluation:
@@ -40,49 +37,27 @@ class Evaluation:
             mean_error = np.round(mean_error, precision)
         return R2, RMSE, mean_error
 
-    def evaluate_sklearn(self, model, title=''):
-        model.fit(self._x_train, self._y_train)
-        y_pred = model.predict(self._x_test)
-        R2, RMSE, mean_error = Evaluation._get_all_scores(self._y_test, y_pred, precision=3)
-
-        plt.figure()
-        plt.plot(self._y_test, y_pred, 'b.')
-        RMSE_str = str(RMSE[0])
-        mean_error_str = str(mean_error)
-        pearson_coeff = str(pearsonr(self._y_test, y_pred))[1:6]
-        plt.title(title + '\ncorrelation: ' + pearson_coeff + '   RMSE: ' + RMSE_str +
-                  '  Mean error: ' + mean_error_str)
-        plt.xlabel('true value')
-        plt.ylabel('predicted value')
-
     def evaluate_nn(self, model):
         verbosity = 1
-        # lr = learning rate, the other params are default values
-        optimizer = optimizers.Nadam(lr=0.0005, beta_1=0.9, beta_2=0.999, epsilon=1e-08, schedule_decay=0.004)
-        model.compile(loss='mse', optimizer=optimizer,metrics=["mse"])
-        # model.compile(loss='categorical_crossentropy', optimizer=optimizer)
-        # LR_callback = ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=10, min_lr=.0001)
-        # val_loss = validation loss, patience is the tolerance
         early_stopping_patience = 50
         early_stopping = EarlyStopping(monitor='val_loss', patience=early_stopping_patience)
         # epochs is the maximum training round, validation split is the size of the validation set,
         # callback stops the training if the validation was not approved
         batch_size = 128  # the size of data that be trained together
-        epoch_num = 1000      # !!!
+        epoch_num = 100
         if self._x_train_aux is not None:
             tic = time.time()
             r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-                          batch_size=batch_size, epochs=epoch_num, validation_split=0.2, callbacks=[early_stopping],
-                          verbose=verbosity)
-            n_epochs = len(r.history['loss'])
-            # retrain the model if the model did not converge
-            while n_epochs < early_stopping_patience + 7:
-                print('Epcohs number was {num}, reset weights and retrain'.format(num=n_epochs))
-                model.reset_states()
-                r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-                              batch_size=batch_size, epochs=epoch_num, validation_split=0.2, callbacks=[early_stopping],
-                              verbose=verbosity)
-                n_epochs = len(r.history['loss'])
+                          batch_size=batch_size, epochs=epoch_num, validation_split=0.2, verbose=verbosity)
+            # n_epochs = len(r.history['loss'])
+            # # retrain the model if the model did not converge
+            # while n_epochs < early_stopping_patience + 7:
+            #     print('Epcohs number was {num}, reset weights and retrain'.format(num=n_epochs))
+            #     model.reset_states()
+            #     r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
+            #                   batch_size=batch_size, epochs=epoch_num, validation_split=0.2, callbacks=[early_stopping],
+            #                   verbose=verbosity)
+            #     n_epochs = len(r.history['loss'])
             toc = time.time()
             print("Training time:{}".format(toc-tic))
             y_pred = model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
@@ -142,7 +117,7 @@ class Evaluation:
                   + RMSE_str + '  Mean error: ' + mean_error_str)
         plt.xlabel('true value')
         plt.ylabel('predicted value')
-        return pearson_coeff, RMSE, mean_error
+        return float(pearson_coeff), RMSE, mean_error
 
     @staticmethod
     def plot_nn_result_cate_color(y_true, y_pred, category_id, category_names, title=''):
@@ -201,25 +176,22 @@ class Evaluation:
     @staticmethod
     def reset_weights(model):
         model.reset_states()
-        # session = K.get_session()
-        # for layer in model.layers:
-        #     if hasattr(layer, 'kernel_initializer'):
-        #         layer.kernel.initializer.run(session=session)
 
     @staticmethod
-    def insert_prediction_result(predict_result_df, sub_name, pearson_coeff, RMSE, mean_error, hp_best):
-        new_data = dict(zip(predict_result_df.columns.values, [sub_name, pearson_coeff, RMSE[0], mean_error] + list(hp_best.values())))
+    def insert_prediction_result(predict_result_df, sub_name, pearson_coeff, RMSE, mean_error):
+        new_data = dict(zip(predict_result_df.columns.values, [sub_name, pearson_coeff, RMSE[0], mean_error]))
         predict_result_df = predict_result_df.append(new_data, ignore_index=True)
         return predict_result_df
 
     @staticmethod
     def export_prediction_result(predict_result_df, test_date, name):
+        predict_result_df = predict_result_df.append({'Subject Name': 'All Subject Mean', **predict_result_df.mean()}, ignore_index=True)
         file_path = 'result_conclusion/{}/trial_summary/{}.csv'.format(test_date, name)
         predict_result_df.to_csv(file_path, index=False)
 
     @staticmethod
     def export_predicted_values(predicted_value_df, test_date, test_name):
-        predicted_value_df.columns = ['subject id', 'trial id', 'true LR', 'predicted LR']
+        predicted_value_df.columns = ['subject id', 'trial id', 'true SI', 'predicted SI']
         file_path = 'result_conclusion/' + test_date + '/step_result/' + test_name + '.csv'
         predicted_value_df.to_csv(file_path, index=False)
 
