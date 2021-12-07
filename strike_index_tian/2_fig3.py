@@ -54,7 +54,7 @@ def plot_confusion_matrix(cm, labels_name):
 
 
 if __name__ == '__main__':
-    result_date = '211201'
+    result_date = '211202'
     cm = load_step_data(result_date)
     plot_confusion_matrix(cm, ['Forefoot', 'Midfoot', 'Rearfoot'])
 

@@ -80,7 +80,7 @@ class ProcessorSICrossVali(ProcessorSI):
 
             hyper_save_path = 'result_conclusion/{}/hyperparameters/{}.pkl'.format(self.test_date, SUB_NAMES[test_id_list[0]])
             if self.tune_hp:
-                if train_id_list < 6:
+                if len(train_id_list) < 6:
                     vali_id_list = sample(train_id_list, 1)
                 else:
                     vali_id_list = sample(train_id_list, 3)

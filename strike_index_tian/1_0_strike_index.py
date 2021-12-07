@@ -13,13 +13,13 @@ IMU_locations = ['l_foot']
 train = copy.deepcopy(SUB_AND_SI_TRIALS)
 
 # train = {'190521GongChangyang': SI_TRIALS,
-#          '190513YangYicheng': SI_TRIALS,
-#          '190522SunDongxiao': SI_TRIALS}
+#          '211206ZhangJijun': SI_TRIALS,
+#          '211204WangDianxin': SI_TRIALS}
 
 
 def regular_run(basename):
     my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1,
-                                           do_input_norm=True, tune_hp=False)
+                                           do_input_norm=True, tune_hp=True)
     print("starting regular run")
     trial_name = basename
     avg_correlation = my_SI_processor.prepare_data_cross_vali(
@@ -146,7 +146,7 @@ def cross_test(basename):
 
 
 if __name__ == "__main__":
-    date = '211130_ZAS_BL'
+    date = '211206'
     regular_run("main")
     # four_cond("main")
     # cross_test("main")

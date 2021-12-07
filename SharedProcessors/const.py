@@ -25,6 +25,7 @@ XSENS_SENSOR_LOACTIONS = ['trunk', 'pelvis', 'l_thigh', 'l_shank', 'l_foot']
 XSENS_FILE_NAME_DIC = {'trunk': 'MT_0370064E_000.mtb', 'pelvis': 'MT_0370064C_000.mtb',
                        'l_thigh': 'MT_0370064B_000.mtb', 'l_shank': 'MT_0370064A_000.mtb',
                        'l_foot': 'MT_03700647_000.mtb'}
+XSENS_FILE_NAME_DIC_2021 = {'l_foot': 'MT_0370064B_000.mtb'}
 
 HAISHENG_SENSOR_SAMPLE_RATE = 100
 MOCAP_SAMPLE_RATE = 200
@@ -50,12 +51,11 @@ TRIAL_NAMES = ['nike static', 'nike baseline 24', 'nike SI 24', 'nike SR 24', 'n
                'mini SI 28', 'mini SR 28']
 SI_TRIALS = ('nike SI 24', 'nike SI 28', 'mini SI 24', 'mini SI 28')
 
-SUB_AND_TRIALS = {'190521GongChangyang': TRIAL_NAMES, '190523ZengJia': TRIAL_NAMES,
-                  '190522QinZhun': TRIAL_NAMES, '190522YangCan': TRIAL_NAMES, '190521LiangJie': TRIAL_NAMES,
-                  '190517ZhangYaqian': TRIAL_NAMES, '190518MouRongzi': TRIAL_NAMES, '190518FuZhinan': TRIAL_NAMES,
-                  '190522SunDongxiao': TRIAL_NAMES, '190513YangYicheng':  TRIAL_NAMES}
-
-SUB_NAMES = tuple(SUB_AND_TRIALS.keys())
+SUB_NAMES_2019 = ('190521GongChangyang', '190523ZengJia', '190522QinZhun', '190522YangCan', '190521LiangJie',
+                  '190517ZhangYaqian', '190518MouRongzi', '190518FuZhinan', '190522SunDongxiao', '190513YangYicheng')
+SUB_NAMES_2021 = ('211204WangDianxin', '211206ZhangJijun', )
+SUB_NAMES = SUB_NAMES_2019 + SUB_NAMES_2021
+SUB_AND_TRIALS = {sub_name: TRIAL_NAMES for sub_name in SUB_NAMES}
 SUB_AND_SI_TRIALS = {sub_name: SI_TRIALS for sub_name in SUB_NAMES}
 
 SUB_AND_NIKE_SI_TRIALS = {sub_name: ('nike SI 24', 'nike SI 28') for sub_name in SUB_NAMES}
@@ -94,3 +94,10 @@ TRAD_SHOE_LENGTHS = {'190521GongChangyang': 302, '190523ZengJia': 288, '190522Qi
 
 GOOD_SUBS = ['190521GongChangyang', '190523ZengJia', '190522QinZhun', '190522YangCan', '190521LiangJie', '190517ZhangYaqian', '190518MouRongzi', '190518FuZhinan', '190522SunDongxiao', '190510HeMing']
 
+
+SUB_WEIGHTS = {'190521GongChangyang': 69, '190523ZengJia': 66, '190522QinZhun': 68, '190522YangCan': 53,
+               '190521LiangJie': 52.1, '190517ZhangYaqian': 56.1, '190518MouRongzi': 57.4, '190518FuZhinan': 56.4,
+               '190522SunDongxiao': 72.3, '190513YangYicheng': 63.4, '190414WangDianxin': 66.3, '190423LiuSensen': 66.5,
+               '190424XuSen': 68, '190426YuHongzhe': 73.4, '190510HeMing': 58.7, '190511ZhuJiayi': 54.3,
+               '190514QiuYue': 47.6, '190514XieJie': 47.9, '190517FuZhenzhen': 50, '211204WangDianxin': 71.9,
+               '211206ZhangJijun': 48.5}
