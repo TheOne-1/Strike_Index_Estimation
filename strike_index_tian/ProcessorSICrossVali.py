@@ -15,7 +15,7 @@ from kerastuner import HyperParameters, Objective
 import tensorflow as tf
 import random as python_random
 import copy
-from .ProcessorSI import ProcessorSI
+from strike_index_tian.ProcessorSI import ProcessorSI
 import pandas as pd
 from const import SUB_NAMES
 import numpy as np
@@ -181,7 +181,6 @@ class ProcessorSICrossVali(ProcessorSI):
         tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2+1)(tower_2)
 
         joined_outputs = concatenate([tower_1, tower_2], axis=-1)
-
         joined_outputs = Activation('relu')(joined_outputs)
         main_outputs = Flatten()(joined_outputs)
 
@@ -222,7 +221,7 @@ class ProcessorSICrossVali(ProcessorSI):
         tuner = BayesianOptimization(define_model, objective=Objective('mean_squared_error', 'min'), metrics=['mean_squared_error'],
                                      directory='J:\Projects\HuaWeiProject\codes\job_2022_hyper_search',
                                      seed=0, executions_per_trial=1, project_name='tuner_logs',
-                                     overwrite=True, max_trials=10)
+                                     overwrite=True, max_trials=30)
         # tuner = RandomSearch(define_model, objective=Objective('mean_squared_error', 'min'), metrics=['mean_squared_error'],
         #                      directory='J:\Projects\HuaWeiProject\codes\job_2022_hyper_search',
         #                      seed=0, executions_per_trial=1, project_name='tuner_logs',
@@ -237,38 +236,6 @@ class ProcessorSICrossVali(ProcessorSI):
             pickle.dump(best_hp.values, handle)
         return best_hp.values
 
-    def define_cnn_model_zas_bl(self, param_set):
-        """To get Zach's accuracy"""
-        main_input_shape = self._x_train.shape
-        main_input = Input((main_input_shape[1:]), name='main_input')
-        base_size = int(self.vector_len)
-
-        kernel_regu = regularizers.l2(0.01)
-        kernel_num = 20
-        kernel_size_1 = 19
-        tower_1 = Conv1D(filters=kernel_num, kernel_size=kernel_size_1, kernel_regularizer=kernel_regu)(main_input)
-        tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1+1)(tower_1)
-
-        kernel_size_2 = 2
-        tower_2 = Conv1D(filters=kernel_num, kernel_size=kernel_size_2, kernel_regularizer=kernel_regu)(main_input)
-        tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2+1)(tower_2)
-
-        joined_outputs = concatenate([tower_1, tower_2], axis=-1)
-
-        joined_outputs = Activation('relu')(joined_outputs)
-        main_outputs = Flatten()(joined_outputs)
-
-        aux_input = Input(shape=(2,), name='aux_input')
-        aux_joined_outputs = concatenate([main_outputs, aux_input])
-        aux_joined_outputs = Dense(32, activation='relu')(aux_joined_outputs)
-        aux_joined_outputs = Dense(1, activation='sigmoid')(aux_joined_outputs)
-        model = Model(inputs=[main_input, aux_input], outputs=aux_joined_outputs)
-        optimizer = optimizers.Nadam(lr=1e-5, beta_1=0.9, beta_2=0.999, epsilon=1e-08, schedule_decay=0.004)
-        model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=["mean_squared_error"])
-        my_evaluator = Evaluation(self._x_train, self._x_test, self._y_train, self._y_test, self._x_train_aux,
-                                  self._x_test_aux)
-        y_pred = my_evaluator.evaluate_nn(model)
-        return y_pred
 
 
 

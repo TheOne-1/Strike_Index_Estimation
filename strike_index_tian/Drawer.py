@@ -29,5 +29,15 @@ def save_fig(name, dpi=600):
     plt.savefig('exports/' + name + '.png', dpi=dpi)
 
 
+def load_step_data(result_date, test_name):
+    all_df = pd.read_csv('result_conclusion/{}/step_result/main{}.csv'.format(result_date, test_name))
+    si_true, si_pred = [], []
+    for sub_name in SUB_NAMES:
+        sub_id = SUB_NAMES.index(sub_name)
+        sub_df = all_df[all_df['subject id'] == sub_id]
+        si_true.append(sub_df['true SI'].values)
+        si_pred.append(sub_df['predicted SI'].values)
+    return si_true, si_pred
+
 
 

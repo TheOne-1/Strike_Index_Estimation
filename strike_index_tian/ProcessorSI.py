@@ -91,30 +91,7 @@ class ProcessorSI:
                 data_end = int(strike_sample_num + self.post_samples+1)
                 step_input[i_step, :, i_channel] = acc_gyr_data[data_start:data_end, i_channel]
                 aux_input[i_step, 0] = step_len
-                aux_input[i_step, 1] = strike_sample_num
-
-        aux_input = ProcessorSI.clean_aux_input(aux_input)
-        return step_input, aux_input
-
-    # convert the input from list to ndarray
-    def convert_input(self, input_all_list, sampling_fre):
-        """
-        CNN based algorithm improved
-        """
-        step_num = len(input_all_list)
-        resample_len = self.sensor_sampling_fre
-        data_clip_start, data_clip_end = int(resample_len * self.start_ratio), int(resample_len * self.end_ratio)
-        step_input = np.zeros([step_num, data_clip_end - data_clip_start, self.channel_num])
-        aux_input = np.zeros([step_num, 2])
-        for i_step in range(step_num):
-            acc_gyr_data = input_all_list[i_step][:, 0:self.channel_num]
-            for i_channel in range(self.channel_num):
-                channel_resampled = ProcessorSI.resample_channel(acc_gyr_data[:, i_channel], resample_len)
-                step_input[i_step, :, i_channel] = channel_resampled[data_clip_start:data_clip_end]
-                step_len = acc_gyr_data.shape[0]
-                aux_input[i_step, 0] = step_len
-                strike_sample_num = np.where(input_all_list[i_step][:, -1] == 1)[0]
-                aux_input[i_step, 1] = strike_sample_num
+                aux_input[i_step, 1] = step_len - strike_sample_num
 
         aux_input = ProcessorSI.clean_aux_input(aux_input)
         return step_input, aux_input
@@ -146,34 +123,34 @@ class ProcessorSI:
         while i_step < len(all_sub_data_struct):
             # delete steps without a valid strike index
             strikes = np.where(input_list[i_step][:, -1] == 1)[0]
-            if np.max(output_list[i_step]) <= 0 or np.max(output_list[i_step]) >= 1:        # !!! count numbers
+            if np.max(output_list[i_step]) <= 0 or np.max(output_list[i_step]) >= 1:
                 if np.max(output_list[i_step]) == 0.0:
                     prntval = np.min(output_list[i_step])
                 else:
                     prntval = np.max(output_list[i_step])
-                print(f"For {SUB_NAMES[sub_list[i_step]]} and trial {TRIAL_NAMES[trial_list[i_step]]}, the strike index is {prntval}")
+                # print(f"For {SUB_NAMES[sub_list[i_step]]} and trial {TRIAL_NAMES[trial_list[i_step]]}, the strike index is {prntval}")
                 all_sub_data_struct.pop(i_step)
                 counter_bad += 1
 
             # delete steps without a valid strike time
             elif len(strikes) != 1:
                 all_sub_data_struct.pop(i_step)
-                if "SI" in TRIAL_NAMES[trial_list[i_step]]:
-                    print("Bad SI in number of strikes test")
+                # if "SI" in TRIAL_NAMES[trial_list[i_step]]:
+                #     print("Bad SI in number of strikes test")
                 counter_bad += 1
 
             # delete a step if the duration between strike and off is too short
             elif not min_time_between_strike_off < input_list[i_step].shape[0] - strikes[0]:
                 all_sub_data_struct.pop(i_step)
-                if "SI" in TRIAL_NAMES[trial_list[i_step]]:
-                    print("Bad SI in strike time test")
+                # if "SI" in TRIAL_NAMES[trial_list[i_step]]:
+                #     print("Bad SI in strike time test")
                 counter_bad += 1
 
             # delete a step if the strike does not fall into 50% to 85% swing phase
             elif not 0.5 * input_list[i_step].shape[0] < strikes[0] < 0.85 * input_list[i_step].shape[0]:
                 all_sub_data_struct.pop(i_step)
-                if "SI" in TRIAL_NAMES[trial_list[i_step]]:
-                    print("Bad SI in occurance of the strike during a step")
+                # if "SI" in TRIAL_NAMES[trial_list[i_step]]:
+                #     print("Bad SI in occurance of the strike during a step")
                 counter_bad += 1
 
             else:

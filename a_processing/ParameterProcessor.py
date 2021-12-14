@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from SharedProcessors.const import TRIAL_NAMES, PLATE_SAMPLE_RATE, MOCAP_SAMPLE_RATE, \
-    LOADING_RATE_NORMALIZATION, SI_TRIALS, SUB_WEIGHTS, MININ_SHOE_LENGTHS, TRAD_SHOE_LENGTHS, GOOD_SUBS
+    LOADING_RATE_NORMALIZATION, SI_TRIALS, SUB_WEIGHTS, MININ_SHOE_LENGTHS, TRAD_SHOE_LENGTHS
 from scipy.signal import find_peaks
 from numpy.linalg import norm
 from a_processing.StrikeOffDetectorIMU import StrikeOffDetectorIMU, StrikeOffDetectorIMUFilter
@@ -277,17 +277,11 @@ class ParamProcessor:
 
     def get_strike_index_all(self, gait_data_df, l_strikes, r_strikes):
         """ This is Zach's version """
-        delay = 4       # why needed?
-        if self._sub_name in GOOD_SUBS:
-            if "mini" in self._current_trial:
-                foot_len = MININ_SHOE_LENGTHS[self._sub_name]
-            elif "nike" in self._current_trial: 
-                foot_len = TRAD_SHOE_LENGTHS[self._sub_name]
-        else:
-            if "mini" in self._current_trial:
-                foot_len = 250
-            elif "nike" in self._current_trial: 
-                foot_len = 276
+        delay = 4
+        if "mini" in self._current_trial:
+            foot_len = MININ_SHOE_LENGTHS[self._sub_name]
+        elif "nike" in self._current_trial:
+            foot_len = TRAD_SHOE_LENGTHS[self._sub_name]
         l_foot_toe_data = gait_data_df[['LFM2_x', 'LFM2_y', 'LFM2_z']].values
         l_foot_heel_data = gait_data_df[['LFCC_x', 'LFCC_y', 'LFCC_z']].values
         l_foot_cop_data = gait_data_df[['c_1_x', 'c_1_y', 'c_1_z']].values

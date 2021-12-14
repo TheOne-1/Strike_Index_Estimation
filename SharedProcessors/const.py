@@ -53,7 +53,8 @@ SI_TRIALS = ('nike SI 24', 'nike SI 28', 'mini SI 24', 'mini SI 28')
 
 SUB_NAMES_2019 = ('190521GongChangyang', '190523ZengJia', '190522QinZhun', '190522YangCan', '190521LiangJie',
                   '190517ZhangYaqian', '190518MouRongzi', '190518FuZhinan', '190522SunDongxiao', '190513YangYicheng')
-SUB_NAMES_2021 = ('211204WangDianxin', '211206ZhangJijun', )
+SUB_NAMES_2021 = ('211204WangDianxin', '211206ZhangJijun', 'Z211207ChenTaosha', 'Z211208DingYuechen', 'Z211208HanDi',
+                  'Z211208JinChao')
 SUB_NAMES = SUB_NAMES_2019 + SUB_NAMES_2021
 SUB_AND_TRIALS = {sub_name: TRIAL_NAMES for sub_name in SUB_NAMES}
 SUB_AND_SI_TRIALS = {sub_name: SI_TRIALS for sub_name in SUB_NAMES}
@@ -81,18 +82,22 @@ FILTER_WIN_LEN = 100        # The length of FIR filter window
 
 FONT_SIZE = 9
 FONT_DICT = {'fontsize': FONT_SIZE, 'fontname': 'DejaVu Sans'}
+FONT_SIZE_SMALL = 8
+FONT_DICT_SMALL = {'fontsize': FONT_SIZE_SMALL, 'fontname': 'DejaVu Sans'}
 LINE_WIDTH = 2
 MININ_SHOE_LENGTHS = {'190521GongChangyang': 262, '190523ZengJia': 252, '190522QinZhun': 252,
                       '190522YangCan': 252, '190521LiangJie': 232, '190517ZhangYaqian': 252,
                       '190518MouRongzi': 252, '190518FuZhinan': 252, '190522SunDongxiao': 262,
-                      '190510HeMing': 252, '190513YangYicheng': 262}
+                      '190510HeMing': 252, '190513YangYicheng': 262, '211204WangDianxin': 262,
+                      '211206ZhangJijun': 252, 'Z211207ChenTaosha': 252, 'Z211208DingYuechen': 262,
+                      'Z211208HanDi': 262, 'Z211208JinChao': 252}
 
 TRAD_SHOE_LENGTHS = {'190521GongChangyang': 302, '190523ZengJia': 288, '190522QinZhun': 288,
                      '190522YangCan': 266, '190521LiangJie': 254, '190517ZhangYaqian': 266,
                      '190518MouRongzi': 266, '190518FuZhinan': 266, '190522SunDongxiao': 302,
-                     '190510HeMing': 266, '190513YangYicheng': 302}
-
-GOOD_SUBS = ['190521GongChangyang', '190523ZengJia', '190522QinZhun', '190522YangCan', '190521LiangJie', '190517ZhangYaqian', '190518MouRongzi', '190518FuZhinan', '190522SunDongxiao', '190510HeMing']
+                     '190510HeMing': 266, '190513YangYicheng': 302, '211204WangDianxin': 302,
+                     '211206ZhangJijun': 266, 'Z211207ChenTaosha': 266, 'Z211208DingYuechen': 302,
+                     'Z211208HanDi': 302, 'Z211208JinChao': 288}
 
 
 SUB_WEIGHTS = {'190521GongChangyang': 69, '190523ZengJia': 66, '190522QinZhun': 68, '190522YangCan': 53,
@@ -100,4 +105,5 @@ SUB_WEIGHTS = {'190521GongChangyang': 69, '190523ZengJia': 66, '190522QinZhun': 
                '190522SunDongxiao': 72.3, '190513YangYicheng': 63.4, '190414WangDianxin': 66.3, '190423LiuSensen': 66.5,
                '190424XuSen': 68, '190426YuHongzhe': 73.4, '190510HeMing': 58.7, '190511ZhuJiayi': 54.3,
                '190514QiuYue': 47.6, '190514XieJie': 47.9, '190517FuZhenzhen': 50, '211204WangDianxin': 71.9,
-               '211206ZhangJijun': 48.5}
+               '211206ZhangJijun': 48.5, 'Z211207ChenTaosha': 57.5, 'Z211208DingYuechen': 66.2,
+               'Z211208HanDi': 73.6, 'Z211208JinChao': 61.2}

@@ -11,5 +11,5 @@ def initialize_param(sub_names):
 
 
 if __name__ == '__main__':
-    initialize_param(SUB_NAMES_2021[1:])
+    initialize_param(SUB_NAMES_2021)
 

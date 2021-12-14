@@ -20,8 +20,8 @@ def define_model(hp):
     base_size = 33
     main_input = Input(shape=(base_size, 6), name='main_input')
     hp_filters = hp.Int("filters", min_value=20, max_value=40, step=1, default=30)
-    hp_tower_1_kernel_size = hp.Int("T1KS", min_value=10, max_value=20, step=2, default=20)
-    hp_tower_2_kernel_size = hp.Int("T2KS", min_value=2, max_value=8, step=2, default=5)
+    hp_tower_1_kernel_size = hp.Int("T1KS", min_value=16, max_value=16, step=1, default=16)
+    hp_tower_2_kernel_size = hp.Int("T2KS", min_value=4, max_value=4, step=1, default=4)
     hp_NN_layer_1_units = hp.Int("NNL1U", min_value=20, max_value=40, step=1, default=30)
     hp_learning_rate = hp.Float("LR", min_value=1e-5, max_value=1e-3, default=1e-4, sampling='log')
     # kernel_init = 'lecun_uniform'
@@ -34,16 +34,16 @@ def define_model(hp):
     tower_2 = Conv1D(filters=hp_filters, kernel_size=hp_tower_2_kernel_size, kernel_regularizer=kernel_regu)(main_input)
     tower_2 = MaxPool1D(pool_size=base_size-hp_tower_2_kernel_size+1)(tower_2)
 
-    joined_outputs = Concatenate(axis=-1)([tower_1, tower_2])
+    joined_outputs = concatenate([tower_1, tower_2], axis=-1)
     joined_outputs = Activation('relu')(joined_outputs)
     main_outputs = Flatten()(joined_outputs)
 
     aux_input = Input(shape=(2,), name='aux_input')
-    aux_joined_outputs = Concatenate()([main_outputs, aux_input])
+    aux_joined_outputs = concatenate([main_outputs, aux_input])
     aux_joined_outputs = Dense(hp_NN_layer_1_units, activation='relu')(aux_joined_outputs)
-    aux_joined_outputs = Dense(1, activation='linear')(aux_joined_outputs)
+    aux_joined_outputs = Dense(1, activation='sigmoid')(aux_joined_outputs)
     model = Model(inputs=[main_input, aux_input], outputs=aux_joined_outputs)
     optimizer = optimizers.Nadam(lr=hp_learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, schedule_decay=0.004)
-    model.compile(loss='mean_squared_error', optimizer=optimizer)
+    model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=["mean_squared_error"])
     return model
 
