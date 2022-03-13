@@ -107,3 +107,21 @@ SUB_WEIGHTS = {'190521GongChangyang': 69, '190523ZengJia': 66, '190522QinZhun': 
                '190514QiuYue': 47.6, '190514XieJie': 47.9, '190517FuZhenzhen': 50, '211204WangDianxin': 71.9,
                '211206ZhangJijun': 48.5, 'Z211207ChenTaosha': 57.5, 'Z211208DingYuechen': 66.2,
                'Z211208HanDi': 73.6, 'Z211208JinChao': 61.2}
+
+SUB_ANTHRO = {'190521GongChangyang': {'BH': 1.78, 'BW': 69, 'MA': 10, 'AGE': 25},
+              '190523ZengJia': {'BH': 1.75, 'BW': 66, 'MA': 8, 'AGE': 23},
+              '190522QinZhun': {'BH': 1.75, 'BW': 68, 'MA': 5, 'AGE': 24},
+              '190522YangCan': {'BH': 1.59, 'BW': 53, 'MA': 16, 'AGE': 24},
+              '190521LiangJie': {'BH': 1.58, 'BW': 52.1, 'MA': 5, 'AGE': 22},
+              '190517ZhangYaqian': {'BH': 1.58, 'BW': 56.1, 'MA': 15, 'AGE': 25},
+              '190518MouRongzi': {'BH': 1.69, 'BW': 57.4, 'MA': 6, 'AGE': 24},
+              '190518FuZhinan': {'BH': 1.62, 'BW': 56.4, 'MA': 13, 'AGE': 25},
+              '190522SunDongxiao': {'BH': 1.78, 'BW': 72.3, 'MA': 8, 'AGE': 23},
+              '190513YangYicheng': {'BH': 1.73, 'BW': 63.4, 'MA': 11, 'AGE': 23},
+              '211204WangDianxin': {'BH': 1.83, 'BW': 71.9, 'MA': 5, 'AGE': 26},
+              '211206ZhangJijun': {'BH': 1.66, 'BW': 48.5, 'MA': 5, 'AGE': 24},
+              'Z211207ChenTaosha': {'BH': 1.58, 'BW': 57.5, 'MA': 12, 'AGE': 23},
+              'Z211208DingYuechen': {'BH': 1.76, 'BW': 66.2, 'MA': 14, 'AGE': 19},
+              'Z211208HanDi': {'BH': 1.77, 'BW': 73.6, 'MA': 20, 'AGE': 19},
+              'Z211208JinChao': {'BH': 1.73, 'BW': 61.2, 'MA': 10, 'AGE': 19}
+              }

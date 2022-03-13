@@ -8,7 +8,6 @@ import scipy.interpolate as interpo
 from const import SUB_NAMES, COLORS, DATA_COLUMNS_XSENS, MOCAP_SAMPLE_RATE, TRIAL_NAMES
 from tensorflow.keras.callbacks import TensorBoard, ReduceLROnPlateau
 from Evaluation import Evaluation
-from keras.layers import *
 from tensorflow_core.python.keras.models import Model
 from tensorflow_core.python.keras import regularizers
 from sklearn.model_selection import train_test_split

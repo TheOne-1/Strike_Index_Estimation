@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
-from strike_index_tian.Drawer import format_plot, save_fig
-from matplotlib import ticker
+from strike_index_tian.Drawer import save_fig
 from const import SUB_NAMES, FONT_SIZE_SMALL, FONT_DICT_SMALL
 import pandas as pd
 import numpy as np
@@ -32,6 +31,7 @@ def plot_confusion_matrix(cm, labels_name):
     cbar = plt.colorbar(fraction=0.04)
     cbar.set_ticks([0, .25, .5, .75, 1])
     cbar.set_ticklabels(['0%', '25%', '50%', '75%', '100%'])
+    cbar.ax.tick_params(labelsize=FONT_SIZE_SMALL)
 
     ax.set_xticks(range(3))
     ax.set_xticklabels(labels_name, fontdict=FONT_DICT_SMALL)
@@ -58,6 +58,7 @@ def plot_confusion_matrix(cm, labels_name):
 if __name__ == '__main__':
     result_date = '211206'
     cm = load_step_cm(result_date)
+    print('correctly classified {:.1f}\%, {:.1f}\%, and {:.1f}\%'.format(100*cm[0, 0], 100*cm[1, 1], 100*cm[2, 2]))
     plot_confusion_matrix(cm, ['Forefoot', 'Midfoot', 'Rearfoot'])
 
 

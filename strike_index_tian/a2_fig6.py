@@ -22,19 +22,19 @@ def set_example_bar_ticks():
 
 def show_each_pair(result_all_df, sub_id):
     sub_df = result_all_df[result_all_df['subject id'] == sub_id]
+    si_true, si_pred = sub_df['true SI'], sub_df['predicted SI']
     plt.figure(figsize=(3.54, 3.54))
     format_plot()
-    sc = plt.scatter(sub_df['true SI'], sub_df['predicted SI'], s=40, marker='.', alpha=0.7, edgecolors='none',
+    sc = plt.scatter(si_true, si_pred, s=40, marker='.', alpha=0.7, edgecolors='none',
                      color=np.array([53, 128, 57])/255)
-    # sc.set_edgecolor("none")
     set_example_bar_ticks()
 
-    coef = np.polyfit(sub_df['true SI'], sub_df['predicted SI'], 1)
+    coef = np.polyfit(si_true, si_pred, 1)
     poly1d_fn = np.poly1d(coef)
     black_line, = plt.plot([0, 1], poly1d_fn([0, 1]), color='black', linewidth=LINE_WIDTH)
     ax = plt.gca()
-    rmse = 100 * np.sqrt(mean_squared_error(sub_df['true SI'], sub_df['predicted SI']))
-    R2 = r2_score(sub_df['true SI'], sub_df['predicted SI'])
+    rmse = 100 * np.sqrt(mean_squared_error(si_true, si_pred))
+    R2 = r2_score(si_true, si_pred)
     plt.text(0.508, 0.135, 'RMSE = {:3.1f}%'.format(rmse), fontdict=FONT_DICT_SMALL, transform=ax.transAxes)
     plt.text(0.578, 0.08, '$R^2$ = {:4.2f}'.format(R2), fontdict=FONT_DICT_SMALL, transform=ax.transAxes)
     plt.text(0.6, 0.03, '$y$ = {:4.2f}$x$ + {:4.2f}'.format(coef[0], coef[1]), fontdict=FONT_DICT_SMALL, transform=ax.transAxes)
@@ -50,6 +50,6 @@ if __name__ == "__main__":
     result_all_df = pd.read_csv('result_conclusion/{}/step_result/main.csv'.format('211206'))
     # for sub_id in range(len(SUB_NAMES)):
     #     show_each_pair(result_all_df, sub_id)
-    show_each_pair(result_all_df, 3)
+    show_each_pair(result_all_df, 5)        # could be from 0, 2, 5, 9, 10
     plt.show()
 

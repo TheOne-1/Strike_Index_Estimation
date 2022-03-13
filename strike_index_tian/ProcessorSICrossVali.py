@@ -19,7 +19,6 @@ from strike_index_tian.ProcessorSI import ProcessorSI
 import pandas as pd
 from const import SUB_NAMES
 import numpy as np
-from keras import backend as K
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import os

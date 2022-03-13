@@ -5,8 +5,7 @@ import pandas as pd
 from scipy.stats import ttest_rel
 import matplotlib as mpl
 import numpy as np
-from sklearn.metrics import mean_squared_error
-from strike_index_tian.Drawer import save_fig, format_plot, load_step_data
+from strike_index_tian.Drawer import save_fig, format_plot, metric_sub_mean, rmse_fun
 import pingouin as pg
 import prettytable as pt
 from strike_index_tian.a2_fig5 import draw_sigifi_sign
@@ -33,13 +32,13 @@ def draw_f4(mean_, std_, sigifi_sign_fun):
         ax.tick_params(axis='x', which='major', pad=10)
         for xtick, color in zip(ax.get_xticklabels(), colors):
             xtick.set_color(color)
-        base_x, base_y = -0.22, -0.154
-        ax.add_patch(mpl.patches.Rectangle((base_x, base_y), ls='--', width=1.23, height=0.07, ec="gray", fill=False,
+        base_x, base_y = -0.22, -0.157
+        ax.add_patch(mpl.patches.Rectangle((base_x, base_y), ls='--', width=1.23, height=0.08, ec="gray", fill=False,
                                            transform=ax.transAxes, clip_on=False))
-        plt.text(base_x+0.02, base_y + 0.015, 'Training', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
-        ax.add_patch(mpl.patches.Rectangle((base_x, base_y-0.106), ls='--', width=1.23, height=0.07, ec="gray", fill=False,
+        plt.text(base_x+0.02, base_y + 0.018, 'Training', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
+        ax.add_patch(mpl.patches.Rectangle((base_x, base_y-0.112), ls='--', width=1.23, height=0.08, ec="gray", fill=False,
                                            transform=ax.transAxes, clip_on=False))
-        plt.text(base_x+0.02, base_y-0.095, 'Test', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
+        plt.text(base_x+0.02, base_y-0.096, 'Test', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
 
     rc('font', family='Arial')
     fig = plt.figure(figsize=(3.54, 2.6))
@@ -97,14 +96,13 @@ if __name__ == "__main__":
     rmses = {condition: [] for condition in conditions}
     means, stds = [], []
     for condition in conditions:
-        si_true, si_pred = load_step_data(result_date, condition)
-        for si_true_sub, si_pred_sub in zip(si_true, si_pred):
-            rmses[condition].append(np.sqrt(mean_squared_error(si_true_sub, si_pred_sub)))
+        rmses[condition] = metric_sub_mean(result_date, condition, rmse_fun)
         means.append(np.mean(rmses[condition]))
         stds.append(np.std(rmses[condition]))
 
     result_df = transfer_data_to_long_df(condition_and_train_test, conditions, rmses)
     statistics(result_df, rmses, conditions)
+    print(max(means) - min(means))
     draw_f4(means, stds, draw_sigifi_sign)
     save_fig('f4', 600)
     plt.show()

@@ -5,8 +5,7 @@ import pandas as pd
 from scipy.stats import ttest_rel
 import matplotlib as mpl
 import numpy as np
-from sklearn.metrics import mean_squared_error
-from strike_index_tian.Drawer import save_fig, format_plot, load_step_data
+from strike_index_tian.Drawer import save_fig, format_plot, metric_sub_mean, rmse_fun, cohen_d
 import pingouin as pg
 import prettytable as pt
 
@@ -18,7 +17,7 @@ def format_errorbar_cap(caplines, size=15):
         caplines[i_cap].set_markeredgewidth(LINE_WIDTH)
 
 
-def draw_f4(mean_, std_, sigifi_sign_fun):
+def draw_f5(mean_, std_, sigifi_sign_fun):
     def format_ticks():
         ax = plt.gca()
         ax.set_ylabel('Root Mean Square Error (%)', fontdict=FONT_DICT_SMALL, labelpad=0)
@@ -32,13 +31,13 @@ def draw_f4(mean_, std_, sigifi_sign_fun):
         ax.tick_params(axis='x', which='major', pad=10)
         for xtick, color in zip(ax.get_xticklabels(), colors):
             xtick.set_color(color)
-        base_x = -0.22
-        ax.add_patch(mpl.patches.Rectangle((base_x, -0.119), ls='--', width=1.23, height=0.058, ec="gray", fill=False,
+        base_x, base_y = -0.22, -0.123
+        ax.add_patch(mpl.patches.Rectangle((base_x, base_y), ls='--', width=1.23, height=0.066, ec="gray", fill=False,
                                            transform=ax.transAxes, clip_on=False))
-        plt.text(base_x+0.02, -0.106, 'Training', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
-        ax.add_patch(mpl.patches.Rectangle((base_x, -0.202), ls='--', width=1.23, height=0.058, ec="gray", fill=False,
+        plt.text(base_x+0.02, base_y + 0.015, 'Training', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
+        ax.add_patch(mpl.patches.Rectangle((base_x, base_y-0.085), ls='--', width=1.23, height=0.066, ec="gray", fill=False,
                                            transform=ax.transAxes, clip_on=False))
-        plt.text(base_x+0.02, -0.189, 'Test', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
+        plt.text(base_x+0.02, base_y-0.071, 'Test', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
 
     rc('font', family='Arial')
     fig = plt.figure(figsize=(3.54, 3.2))
@@ -89,19 +88,24 @@ def statistics(result_df, rmses, conditions):
     anova_result = pg.rm_anova(dv='RMSE', within=['train', 'test'], subject='subject id', data=result_df)
     print(anova_result)
 
-    tb = pt.PrettyTable()
-    tb.field_names = conditions
+    tb_p, tb_d = pt.PrettyTable(), pt.PrettyTable()
+    tb_p.field_names, tb_d.field_names = conditions, conditions
     for i_combo, combo_a in enumerate(conditions):
-        p_val_row = []
+        p_val_row, d_val_row = [], []
         for j_combo, combo_b in enumerate(conditions):
             if i_combo == j_combo:
-                p_val = 1
+                p_val, d_val = 1, 0
             else:
                 p_val = round(ttest_rel(rmses[combo_a], rmses[combo_b]).pvalue, 3)
+                d_val = round(cohen_d(rmses[combo_a], rmses[combo_b]), 3)
             p_val_row.append(p_val)
-        tb.add_row(p_val_row)
-    tb.add_column('', conditions, align="l")
-    print(tb)
+            d_val_row.append(d_val)
+        tb_p.add_row(p_val_row)
+        tb_d.add_row(d_val_row)
+    tb_p.add_column('', conditions, align="l")
+    tb_d.add_column('', conditions, align="l")
+    print(tb_p)
+    print(tb_d)
 
 
 if __name__ == "__main__":
@@ -112,14 +116,13 @@ if __name__ == "__main__":
     rmses = {condition: [] for condition in conditions}
     means, stds = [], []
     for condition in conditions:
-        si_true, si_pred = load_step_data(result_date, condition)
-        for si_true_sub, si_pred_sub in zip(si_true, si_pred):
-            rmses[condition].append(np.sqrt(mean_squared_error(si_true_sub, si_pred_sub)))
+        rmses[condition] = metric_sub_mean(result_date, condition, rmse_fun)
         means.append(np.mean(rmses[condition]))
         stds.append(np.std(rmses[condition]))
 
     result_df = transfer_data_to_long_df(condition_and_train_test, conditions, rmses)
     statistics(result_df, rmses, conditions)
-    draw_f4(means, stds, draw_sigifi_sign)
+    print(max(means) - min(means))
+    draw_f5(means, stds, draw_sigifi_sign)
     save_fig('f5', 600)
     plt.show()
