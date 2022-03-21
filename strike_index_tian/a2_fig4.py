@@ -9,24 +9,18 @@ from strike_index_tian.Drawer import save_fig, format_plot, metric_sub_mean, rms
 import pingouin as pg
 import prettytable as pt
 from strike_index_tian.a2_fig5 import draw_sigifi_sign
+import warnings
 
 
-def format_errorbar_cap(caplines, size=15):
-    for i_cap in range(1):
-        caplines[i_cap].set_marker('_')
-        caplines[i_cap].set_markersize(size)
-        caplines[i_cap].set_markeredgewidth(LINE_WIDTH)
-
-
-def draw_f4(mean_, std_, sigifi_sign_fun):
+def draw_f4(rmses, conditions, sigifi_sign_fun):
     def format_ticks():
         ax = plt.gca()
-        ax.set_ylabel('Root Mean Square Error (%)', fontdict=FONT_DICT_SMALL, labelpad=0)
-        ax.set_ylim(0, 0.1)
-        ax.set_yticks(np.arange(0, 0.11, 0.02))
-        ax.set_yticklabels(['0%', '2%', '4%', '6%', '8%', '10%'], fontdict=FONT_DICT_SMALL)
-        ax.set_xlim(-1, 7)
-        ax.set_xticks([0, 2, 4, 6])
+        ax.set_ylabel('Root Mean Square Error (%)', fontdict=FONT_DICT_SMALL, labelpad=5)
+        ax.set_ylim(0.04, 0.12)
+        ax.set_yticks(np.arange(0.04, 0.13, 0.02))
+        ax.set_yticklabels(['4%', '6%', '8%', '10%', '12%'], fontdict=FONT_DICT_SMALL)
+        ax.set_xlim(-0.5, 3.5)
+        ax.set_xticks([0, 1, 2, 3])
         ax.set_xticklabels(['2.4 m/s\n2.4 m/s', '2.8 m/s\n2.8 m/s', '2.4 m/s\n2.8 m/s', '2.8 m/s\n2.4 m/s'],
                            fontdict=FONT_DICT_SMALL, linespacing=2.2)
         ax.tick_params(axis='x', which='major', pad=10)
@@ -45,16 +39,14 @@ def draw_f4(mean_, std_, sigifi_sign_fun):
     base_color = np.array([68, 128, 22]) / 255
     colors = [base_color * x for x in [1.2, 1, 0.8, 0.6]]
     format_plot()
-    bar_locs = [0, 2, 4, 6]
-    bar_ = []
-    for i_condition in range(4):
-        bar_.append(plt.bar(bar_locs[i_condition], mean_[i_condition], color=colors[i_condition], width=1))
-    ebar, caplines, barlinecols = plt.errorbar(bar_locs, mean_, std_, capsize=0, ecolor='black',
-                                               fmt='none', lolims=True, elinewidth=LINE_WIDTH)
+    for i_condition, condition in enumerate(conditions):
+        box_ = plt.boxplot(rmses[condition], positions=[i_condition], widths=[0.5], patch_artist=True)
+        for field in ['medians', 'whiskers', 'caps', 'boxes']:
+            [box_[field][i].set(linewidth=LINE_WIDTH, color=colors[i_condition]) for i in range(len(box_[field]))]
+        [box_['fliers'][i].set(marker='D', markeredgecolor=colors[i_condition], markerfacecolor=colors[i_condition], markersize=2.5) for i in range(len(box_['fliers']))]
+        box_['medians'][0].set(linewidth=LINE_WIDTH, color=[1, 1, 1])
 
-    sigifi_sign_fun(mean_, std_, bar_locs)
-    format_errorbar_cap(caplines, 8)
-    plt.tight_layout(rect=[0.05, 0.07, 1.01, 1.01])
+    plt.tight_layout(rect=[0.04, 0.07, 1.01, 1.01])
     format_ticks()
 
 
@@ -93,16 +85,12 @@ if __name__ == "__main__":
     condition_and_train_test = {'_24': ('24', '24'), '_28': ('28', '28'),
                                 '_tr24te28': ('24', '28'), '_tr28te24': ('28', '24')}
     conditions = list(condition_and_train_test.keys())
-    rmses = {condition: [] for condition in conditions}
-    means, stds = [], []
-    for condition in conditions:
-        rmses[condition] = metric_sub_mean(result_date, condition, rmse_fun)
-        means.append(np.mean(rmses[condition]))
-        stds.append(np.std(rmses[condition]))
+    rmses = {condition: metric_sub_mean(result_date, condition, rmse_fun) for condition in conditions}
 
     result_df = transfer_data_to_long_df(condition_and_train_test, conditions, rmses)
     statistics(result_df, rmses, conditions)
-    print(max(means) - min(means))
-    draw_f4(means, stds, draw_sigifi_sign)
+    with warnings.catch_warnings():
+        warnings.simplefilter(action='ignore', category=FutureWarning)
+        draw_f4(rmses, conditions, draw_sigifi_sign)
     save_fig('f4', 600)
     plt.show()

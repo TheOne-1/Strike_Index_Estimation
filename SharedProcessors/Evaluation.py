@@ -4,16 +4,9 @@ from sklearn import metrics
 from sklearn.metrics import r2_score, mean_squared_error
 from numpy import sqrt
 from scipy.stats import pearsonr
-from tensorflow.keras.callbacks import EarlyStopping, TensorBoard, ReduceLROnPlateau
-from const import COLORS, SUB_NAMES
-from tensorflow.keras import backend as K
-import pandas as pd
-import os
-from kerastuner.tuners import BayesianOptimization, RandomSearch, Hyperband
+from tensorflow.keras.callbacks import EarlyStopping
+from const import COLORS
 import time
-from MakeModel import define_model
-import tensorflow as tf
-from pearsonr import pearson_r
 
 
 class Evaluation:
@@ -69,34 +62,34 @@ class Evaluation:
             y_pred = model.predict(self._x_test, batch_size=batch_size)
         return y_pred
 
-    def HyperparameterTuneNN(self,test_sub):
-        early_stopping_patience = 30
-        name = "BayO_SI"
-        early_stopping = EarlyStopping(monitor='val_loss', patience=early_stopping_patience)
-        tb_callback = TensorBoard(f'.\\logs\\{name}\\{SUB_NAMES[test_sub]}', update_freq=1)
-
-        # epochs is the maximum training round, validation split is the size of the validation set,
-        # callback stops the training if the validation was not approved
-        batch_size = 64  # the size of data that be trained together
-        epoch_num = 500
-        tuner_type = "BO"
-
-        if tuner_type == "BO":
-            tuner = BayesianOptimization(define_model, project_name= name + "\\" + str(SUB_NAMES[test_sub]), objective='mse', metrics = ["mse", pearson_r] , max_trials=30, seed=314, executions_per_trial=1)
-        elif tuner_type == "Hyperband":
-            tuner = Hyperband(hypermodel=define_model, project_name="Test_Sub-"+str(SUB_NAMES[test_sub])+"-Run_2", objective='mse', max_epochs=epoch_num)
-        if self._x_train_aux is not None:
-            tuner.search(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-                              batch_size=batch_size, epochs=epoch_num, validation_split=.3,
-                              verbose=2, callbacks=[early_stopping,tb_callback])
-            best_hp = tuner.get_best_hyperparameters()[0]
-            best_model = tuner.hypermodel.build(best_hp)
-            best_model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-                              batch_size=batch_size, epochs=epoch_num, validation_split=0.2,
-                              verbose=2,callbacks=[early_stopping])
-            y_pred = best_model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
-                                   batch_size=batch_size).ravel()
-        return y_pred , best_hp.values
+    # def HyperparameterTuneNN(self,test_sub):
+    #     early_stopping_patience = 30
+    #     name = "BayO_SI"
+    #     early_stopping = EarlyStopping(monitor='val_loss', patience=early_stopping_patience)
+    #     tb_callback = TensorBoard(f'.\\logs\\{name}\\{SUB_NAMES[test_sub]}', update_freq=1)
+    #
+    #     # epochs is the maximum training round, validation split is the size of the validation set,
+    #     # callback stops the training if the validation was not approved
+    #     batch_size = 64  # the size of data that be trained together
+    #     epoch_num = 500
+    #     tuner_type = "BO"
+    #
+    #     if tuner_type == "BO":
+    #         tuner = BayesianOptimization(define_model, project_name= name + "\\" + str(SUB_NAMES[test_sub]), objective='mse', metrics = ["mse", pearson_r] , max_trials=30, seed=314, executions_per_trial=1)
+    #     elif tuner_type == "Hyperband":
+    #         tuner = Hyperband(hypermodel=define_model, project_name="Test_Sub-"+str(SUB_NAMES[test_sub])+"-Run_2", objective='mse', max_epochs=epoch_num)
+    #     if self._x_train_aux is not None:
+    #         tuner.search(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
+    #                           batch_size=batch_size, epochs=epoch_num, validation_split=.3,
+    #                           verbose=2, callbacks=[early_stopping,tb_callback])
+    #         best_hp = tuner.get_best_hyperparameters()[0]
+    #         best_model = tuner.hypermodel.build(best_hp)
+    #         best_model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
+    #                           batch_size=batch_size, epochs=epoch_num, validation_split=0.2,
+    #                           verbose=2,callbacks=[early_stopping])
+    #         y_pred = best_model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
+    #                                batch_size=batch_size).ravel()
+    #     return y_pred , best_hp.values
 
     @staticmethod
     def plot_nn_result(y_true, y_pred, title=''):

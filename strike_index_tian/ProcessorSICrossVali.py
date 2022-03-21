@@ -9,9 +9,9 @@ import pickle
 from tensorflow.keras.layers import *
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model
-from kerastuner.tuners import BayesianOptimization, RandomSearch, Hyperband
+from keras_tuner.tuners import BayesianOptimization, RandomSearch, Hyperband
 from tensorflow.keras import optimizers
-from kerastuner import HyperParameters, Objective
+from keras_tuner import HyperParameters, Objective
 import tensorflow as tf
 import random as python_random
 import copy
@@ -188,7 +188,7 @@ class ProcessorSICrossVali(ProcessorSI):
         aux_joined_outputs = Dense(param_set['NNL1U'], activation='relu')(aux_joined_outputs)
         aux_joined_outputs = Dense(1, activation='sigmoid')(aux_joined_outputs)
         model = Model(inputs=[main_input, aux_input], outputs=aux_joined_outputs)
-        optimizer = optimizers.Nadam(lr=param_set['LR'], beta_1=0.9, beta_2=0.999, epsilon=1e-08, schedule_decay=0.004)
+        optimizer = optimizers.Nadam(lr=param_set['LR'], beta_1=0.9, beta_2=0.999, epsilon=1e-08)
         model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=["mean_squared_error"])
         my_evaluator = Evaluation(self._x_train, self._x_test, self._y_train, self._y_test, self._x_train_aux,
                                   self._x_test_aux)
@@ -220,11 +220,7 @@ class ProcessorSICrossVali(ProcessorSI):
         tuner = BayesianOptimization(define_model, objective=Objective('mean_squared_error', 'min'), metrics=['mean_squared_error'],
                                      directory='J:\Projects\HuaWeiProject\codes\job_2022_hyper_search',
                                      seed=0, executions_per_trial=1, project_name='tuner_logs',
-                                     overwrite=True, max_trials=30)
-        # tuner = RandomSearch(define_model, objective=Objective('mean_squared_error', 'min'), metrics=['mean_squared_error'],
-        #                      directory='J:\Projects\HuaWeiProject\codes\job_2022_hyper_search',
-        #                      seed=0, executions_per_trial=1, project_name='tuner_logs',
-        #                      overwrite=True, max_trials=2)
+                                     overwrite=True, max_trials=30)        # HYPER CHANGE
         print('Hyper search')
         tuner.search(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
                      batch_size=batch_size, epochs=epoch_num, verbose=1,
