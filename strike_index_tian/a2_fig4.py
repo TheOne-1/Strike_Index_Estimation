@@ -18,7 +18,7 @@ def draw_f4(rmses, conditions, sigifi_sign_fun):
         ax.set_ylabel('Root Mean Square Error (%)', fontdict=FONT_DICT_SMALL, labelpad=5)
         ax.set_ylim(0.04, 0.12)
         ax.set_yticks(np.arange(0.04, 0.13, 0.02))
-        ax.set_yticklabels(['4%', '6%', '8%', '10%', '12%'], fontdict=FONT_DICT_SMALL)
+        ax.set_yticklabels(['4', '6', '8', '10', '12'], fontdict=FONT_DICT_SMALL)
         ax.set_xlim(-0.5, 3.5)
         ax.set_xticks([0, 1, 2, 3])
         ax.set_xticklabels(['2.4 m/s\n2.4 m/s', '2.8 m/s\n2.8 m/s', '2.4 m/s\n2.8 m/s', '2.8 m/s\n2.4 m/s'],
@@ -81,7 +81,7 @@ def statistics(result_df, rmses, conditions):
 
 
 if __name__ == "__main__":
-    result_date = '211206'
+    result_date = '220325'
     condition_and_train_test = {'_24': ('24', '24'), '_28': ('28', '28'),
                                 '_tr24te28': ('24', '28'), '_tr28te24': ('28', '24')}
     conditions = list(condition_and_train_test.keys())

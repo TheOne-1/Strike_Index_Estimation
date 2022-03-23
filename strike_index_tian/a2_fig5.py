@@ -17,7 +17,7 @@ def draw_f5(rmses, conditions, sigifi_sign_fun):
         ax.set_ylabel('Root Mean Square Error (%)', fontdict=FONT_DICT_SMALL, labelpad=5)
         ax.set_ylim(0.02, 0.26)
         ax.set_yticks(np.arange(0.02, 0.28, 0.06))
-        ax.set_yticklabels(['2%', '8%', '14%', '20%', '26%'], fontdict=FONT_DICT_SMALL)
+        ax.set_yticklabels(['2', '8', '14', '20', '26'], fontdict=FONT_DICT_SMALL)
         ax.set_xlim(-0.5, 3.5)
         ax.set_xticks(bar_locs)
         ax.set_xticklabels(['Standard\nStandard', 'Minimalist\nMinimalist', 'Standard\nMinimalist', 'Minimalist\nStandard'],
@@ -105,7 +105,7 @@ def statistics(result_df, rmses, conditions):
 
 
 if __name__ == "__main__":
-    result_date = '211206'
+    result_date = '220325'
     condition_and_train_test = {'_Trad': ('Standard', 'Standard'), '_Minim': ('Minimalist', 'Minimalist'),
                                 '_trTradteMinim': ('Standard', 'Minimalist'), '_trMinimteTrad': ('Minimalist', 'Standard')}
     conditions = list(condition_and_train_test.keys())
