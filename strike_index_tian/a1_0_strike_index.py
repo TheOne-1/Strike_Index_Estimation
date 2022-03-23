@@ -1,25 +1,22 @@
-from ProcessorSICrossVali import ProcessorSICrossVali
+from ProcessorSICrossVali import ProcessorSICrossVali, ProcessorSICrossValiModelSize
 from SharedProcessors.const import SUB_AND_SI_TRIALS, SI_TRIALS
 import copy
-import tensorflow as tf
 import pandas as pd
-import itertools
 import os
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-tf.enable_eager_execution()
 IMU_locations = ['l_foot']
 
 train = copy.deepcopy(SUB_AND_SI_TRIALS)
 
 # train = {'190521GongChangyang': SI_TRIALS,
-#          '211206ZhangJijun': SI_TRIALS,
+#          'Z211208DingYuechen': SI_TRIALS,
 #          '211204WangDianxin': SI_TRIALS}
 
 
 def regular_run(basename):
     my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1,
-                                           do_input_norm=True, tune_hp=True)
+                                           do_input_norm=True, tune_hp=True)       # !!!
     print("starting regular run")
     trial_name = basename
     avg_correlation = my_SI_processor.prepare_data_cross_vali(
@@ -131,8 +128,37 @@ def evaluate_train_set_influence(basename):
                                             train_num=len(train) - 1)
 
 
+def evaluate_subject_sufficiency(basename):
+    my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1, do_input_norm=True)
+    print("starting subject sufficiently")
+    for i in range(1, len(train)-1):
+        trial_name = f"{basename}_training_with_{i}"
+        my_SI_processor.prepare_data_cross_vali(test_name=trial_name, train_num=i)
+
+
+def evaluate_cnn_size(basename):
+    my_SI_processor = ProcessorSICrossValiModelSize(train, IMU_locations, date, strike_off_from_IMU=1, do_input_norm=True)
+    print("starting evaluating cnn size")
+    my_SI_processor.prepare_data_cross_vali(0.5, 1, test_name=basename+'_size_half_unit', train_num=len(train)-1)
+    my_SI_processor.prepare_data_cross_vali(2, 1, test_name=basename+'_size_double_unit', train_num=len(train)-1)
+    my_SI_processor.prepare_data_cross_vali(1, 2, test_name=basename+'_size_double_layer', train_num=len(train)-1)
+
+
 if __name__ == "__main__":
-    date = '211214'
+    date = '220322'
     regular_run("main")
     cross_test("main")
     evaluate_train_set_influence("main")
+    evaluate_subject_sufficiency("main")
+    evaluate_cnn_size("main")
+
+
+
+
+
+
+
+
+
+
+

@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import mean_squared_error
 from strike_index_tian.Drawer import save_fig, format_plot, metric_sub_mean, rmse_fun
 from sklearn.metrics import r2_score
-from const import SUB_ANTHRO, SUB_NAMES
+from SharedProcessors.const import SUB_ANTHRO, SUB_NAMES
 
 
 if __name__ == "__main__":

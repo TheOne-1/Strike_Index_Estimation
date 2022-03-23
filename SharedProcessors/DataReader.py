@@ -1,4 +1,4 @@
-from const import PROCESSED_DATA_PATH, MOCAP_SAMPLE_RATE, RAW_DATA_PATH, SUB_NAMES, TRIAL_NAMES
+from SharedProcessors.const import PROCESSED_DATA_PATH, MOCAP_SAMPLE_RATE, RAW_DATA_PATH, SUB_NAMES, TRIAL_NAMES
 from OneTrialData import OneTrialData, OneTrialDataStatic
 from DataStruct import DataStructSample
 

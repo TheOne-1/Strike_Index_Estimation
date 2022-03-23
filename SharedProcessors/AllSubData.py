@@ -1,6 +1,6 @@
-from const import PROCESSED_DATA_PATH, MOCAP_SAMPLE_RATE
-from OneTrialData import OneTrialData, OneTrialDataStatic
-from AllSubDataStruct import AllSubDataStruct
+from SharedProcessors.const import PROCESSED_DATA_PATH, MOCAP_SAMPLE_RATE
+from SharedProcessors.OneTrialData import OneTrialData, OneTrialDataStatic
+from SharedProcessors.AllSubDataStruct import AllSubDataStruct
 
 
 class AllSubData:

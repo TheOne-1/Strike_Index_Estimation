@@ -3,18 +3,12 @@ Conv template, improvements:
 (1) add input such as subject height, step length, strike occurance time
 """
 import matplotlib.pyplot as plt
-from AllSubData import AllSubData
+from SharedProcessors.AllSubData import AllSubData
 import scipy.interpolate as interpo
-from const import SUB_NAMES, COLORS, DATA_COLUMNS_XSENS, MOCAP_SAMPLE_RATE, TRIAL_NAMES
-from tensorflow.keras.callbacks import TensorBoard, ReduceLROnPlateau
-from Evaluation import Evaluation
-from tensorflow_core.python.keras.models import Model
-from tensorflow_core.python.keras import regularizers
+from SharedProcessors.const import SUB_NAMES, COLORS, DATA_COLUMNS_XSENS, MOCAP_SAMPLE_RATE, TRIAL_NAMES
 from sklearn.model_selection import train_test_split
-from const import TRIAL_NAMES
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-import os
 
 
 class ProcessorSI:

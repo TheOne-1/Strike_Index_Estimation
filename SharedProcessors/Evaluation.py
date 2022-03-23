@@ -2,10 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.metrics import r2_score, mean_squared_error
+from tensorflow.keras.callbacks import CSVLogger
 from numpy import sqrt
 from scipy.stats import pearsonr
 from tensorflow.keras.callbacks import EarlyStopping
-from const import COLORS
+from SharedProcessors.const import COLORS, EPOCH_NUM, BATCH_SIZE
 import time
 
 
@@ -30,66 +31,15 @@ class Evaluation:
             mean_error = np.round(mean_error, precision)
         return R2, RMSE, mean_error
 
-    def evaluate_nn(self, model):
+    def evaluate_nn(self, model, log_file):
         verbosity = 1
-        early_stopping_patience = 50
-        early_stopping = EarlyStopping(monitor='val_loss', patience=early_stopping_patience)
-        # epochs is the maximum training round, validation split is the size of the validation set,
-        # callback stops the training if the validation was not approved
-        batch_size = 128  # the size of data that be trained together
-        epoch_num = 100
-        if self._x_train_aux is not None:
-            tic = time.time()
-            r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-                          batch_size=batch_size, epochs=epoch_num, validation_split=0.2, verbose=verbosity)
-            # n_epochs = len(r.history['loss'])
-            # # retrain the model if the model did not converge
-            # while n_epochs < early_stopping_patience + 7:
-            #     print('Epcohs number was {num}, reset weights and retrain'.format(num=n_epochs))
-            #     model.reset_states()
-            #     r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-            #                   batch_size=batch_size, epochs=epoch_num, validation_split=0.2, callbacks=[early_stopping],
-            #                   verbose=verbosity)
-            #     n_epochs = len(r.history['loss'])
-            toc = time.time()
-            print("Training time:{}".format(toc-tic))
-            y_pred = model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
-                                   batch_size=batch_size)
-            # print('Final model, loss = {loss}, epochs = {epochs}'.format(loss=r.history['loss'][-1], epochs=len())
-        else:
-            model.fit(self._x_train, self._y_train, batch_size=batch_size,
-                      epochs=epoch_num, validation_split=0.2, callbacks=[early_stopping])
-            y_pred = model.predict(self._x_test, batch_size=batch_size)
+        training_logger = CSVLogger(log_file, append=False, separator=',')
+        r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
+                      batch_size=BATCH_SIZE, epochs=EPOCH_NUM, verbose=verbosity, callbacks=[training_logger],
+                      validation_data=({'main_input': self._x_test, 'aux_input': self._x_test_aux}, self._y_test))
+        y_pred = model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
+                               batch_size=BATCH_SIZE)
         return y_pred
-
-    # def HyperparameterTuneNN(self,test_sub):
-    #     early_stopping_patience = 30
-    #     name = "BayO_SI"
-    #     early_stopping = EarlyStopping(monitor='val_loss', patience=early_stopping_patience)
-    #     tb_callback = TensorBoard(f'.\\logs\\{name}\\{SUB_NAMES[test_sub]}', update_freq=1)
-    #
-    #     # epochs is the maximum training round, validation split is the size of the validation set,
-    #     # callback stops the training if the validation was not approved
-    #     batch_size = 64  # the size of data that be trained together
-    #     epoch_num = 500
-    #     tuner_type = "BO"
-    #
-    #     if tuner_type == "BO":
-    #         tuner = BayesianOptimization(define_model, project_name= name + "\\" + str(SUB_NAMES[test_sub]), objective='mse', metrics = ["mse", pearson_r] , max_trials=30, seed=314, executions_per_trial=1)
-    #     elif tuner_type == "Hyperband":
-    #         tuner = Hyperband(hypermodel=define_model, project_name="Test_Sub-"+str(SUB_NAMES[test_sub])+"-Run_2", objective='mse', max_epochs=epoch_num)
-    #     if self._x_train_aux is not None:
-    #         tuner.search(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-    #                           batch_size=batch_size, epochs=epoch_num, validation_split=.3,
-    #                           verbose=2, callbacks=[early_stopping,tb_callback])
-    #         best_hp = tuner.get_best_hyperparameters()[0]
-    #         best_model = tuner.hypermodel.build(best_hp)
-    #         best_model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-    #                           batch_size=batch_size, epochs=epoch_num, validation_split=0.2,
-    #                           verbose=2,callbacks=[early_stopping])
-    #         y_pred = best_model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
-    #                                batch_size=batch_size).ravel()
-    #     return y_pred , best_hp.values
 
     @staticmethod
     def plot_nn_result(y_true, y_pred, title=''):

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from const import LINE_WIDTH, FONT_DICT_SMALL, SUB_NAMES, FONT_SIZE_SMALL
+from SharedProcessors.const import LINE_WIDTH, FONT_DICT_SMALL, SUB_NAMES, FONT_SIZE_SMALL
 from Drawer import format_plot, save_fig
 from sklearn.metrics import r2_score, mean_squared_error
 

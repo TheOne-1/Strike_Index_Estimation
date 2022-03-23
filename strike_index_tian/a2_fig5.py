@@ -1,4 +1,4 @@
-from const import LINE_WIDTH, FONT_DICT_SMALL, SUB_NAMES
+from SharedProcessors.const import LINE_WIDTH, FONT_DICT_SMALL, SUB_NAMES
 import matplotlib.pyplot as plt
 from matplotlib import rc
 import pandas as pd

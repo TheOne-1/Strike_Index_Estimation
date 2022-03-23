@@ -1,4 +1,4 @@
-from const import TRIAL_NAMES, SUB_NAMES
+from SharedProcessors.const import TRIAL_NAMES, SUB_NAMES
 import numpy as np
 import pandas as pd
 

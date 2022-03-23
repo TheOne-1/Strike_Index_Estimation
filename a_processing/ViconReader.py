@@ -2,7 +2,7 @@ import csv
 import pandas as pd
 import numpy as np
 from scipy.signal import butter, filtfilt
-from const import SEGMENT_MARKERS, PLATE_SAMPLE_RATE, HAISHENG_SENSOR_SAMPLE_RATE, FORCE_NAMES, MOCAP_SAMPLE_RATE, \
+from SharedProcessors.const import SEGMENT_MARKERS, PLATE_SAMPLE_RATE, HAISHENG_SENSOR_SAMPLE_RATE, FORCE_NAMES, MOCAP_SAMPLE_RATE, \
     COP_DIFFERENCE
 
 

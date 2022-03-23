@@ -1,4 +1,4 @@
-from const import TRIAL_NAMES, SUB_NAMES, DATA_COLUMNS_IMU
+from SharedProcessors.const import TRIAL_NAMES, SUB_NAMES, DATA_COLUMNS_IMU
 import numpy as np
 import pandas as pd
 

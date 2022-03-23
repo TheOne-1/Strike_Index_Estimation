@@ -79,6 +79,7 @@ ROTATION_VIA_STATIC_CALIBRATION = False
 TRIAL_START_BUFFER = 3       # 3 seconds filter buffer
 FILTER_WIN_LEN = 100        # The length of FIR filter window
 
+EPOCH_NUM, BATCH_SIZE = 100, 64       # !!!
 
 FONT_SIZE = 9
 FONT_DICT = {'fontsize': FONT_SIZE, 'fontname': 'DejaVu Sans'}

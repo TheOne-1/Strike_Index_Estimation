@@ -1,4 +1,4 @@
-from const import SI_TRIALS, LINE_WIDTH, SUB_NAMES, FONT_SIZE, FONT_DICT, TRIAL_NAMES
+from SharedProcessors.const import SI_TRIALS, LINE_WIDTH, SUB_NAMES, FONT_SIZE, FONT_DICT, TRIAL_NAMES
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt

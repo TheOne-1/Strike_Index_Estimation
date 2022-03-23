@@ -1,5 +1,5 @@
 import numpy as np
-from const import RAW_DATA_PATH, TRIAL_NAMES, MOCAP_SAMPLE_RATE
+from SharedProcessors.const import RAW_DATA_PATH, TRIAL_NAMES, MOCAP_SAMPLE_RATE
 import matplotlib.pyplot as plt
 import scipy.interpolate as interpo
 from ViconReader import ViconReader

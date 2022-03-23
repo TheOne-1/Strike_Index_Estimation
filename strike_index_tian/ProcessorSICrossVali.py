@@ -3,8 +3,7 @@ cross validation
 (1) No resampling
 (2) Reduced network size
 """
-from Evaluation import Evaluation
-from SharedProcessors.MakeModel import define_model
+from SharedProcessors.Evaluation import Evaluation
 import pickle
 from tensorflow.keras.layers import *
 from tensorflow.keras import regularizers
@@ -17,7 +16,7 @@ import random as python_random
 import copy
 from strike_index_tian.ProcessorSI import ProcessorSI
 import pandas as pd
-from const import SUB_NAMES
+from SharedProcessors.const import SUB_NAMES, MAIN_DATA_PATH, EPOCH_NUM, BATCH_SIZE
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
@@ -39,10 +38,7 @@ class ProcessorSICrossVali(ProcessorSI):
         os.environ['PYTHONHASHSEED'] = str(0)
         np.random.seed(0)
         python_random.seed(0)
-        tf.random.set_random_seed(0)
-        # session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
-        # sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
-        # K.set_session(sess)
+        tf.random.set_seed(0)
 
     def prepare_data_cross_vali(self, test_name, test_set_sub_num=1, start_ratio=.5, end_ratio=.7,
                                 pre_samples=12, post_samples=20, trials=[2, 5, 9, 12],
@@ -111,7 +107,7 @@ class ProcessorSICrossVali(ProcessorSI):
             if self.do_input_norm:
                 self.norm_input()
 
-            y_pred = self.define_cnn_model(param_set).reshape([-1, 1])
+            y_pred = self.define_cnn_model(param_set, SUB_NAMES[test_id_list[0]]).reshape([-1, 1])
 
             pearson_coeff, RMSE, mean_error = Evaluation.plot_nn_result(self._y_test, y_pred, title=SUB_NAMES[test_id_list[0]])
             discrete_prediction_results = pd.DataFrame(columns=["true","pred"])
@@ -143,6 +139,10 @@ class ProcessorSICrossVali(ProcessorSI):
             os.makedirs("result_conclusion/{}/charts".format(self.test_date))
         if not os.path.exists("result_conclusion/{}/hyperparameters".format(self.test_date)):
             os.makedirs("result_conclusion/{}/hyperparameters".format(self.test_date))
+        if not os.path.exists("result_conclusion/{}/model".format(self.test_date)):
+            os.makedirs("result_conclusion/{}/model".format(self.test_date))
+        if not os.path.exists("result_conclusion/{}/training_log".format(self.test_date)):
+            os.makedirs("result_conclusion/{}/training_log".format(self.test_date))
 
     @staticmethod
     def save_all_predicted_values(predicted_value_df, y_true, y_pred, sub_id, test_trial_ids):
@@ -164,12 +164,12 @@ class ProcessorSICrossVali(ProcessorSI):
             plt.close(fig)
         pp.close()
 
-    def define_cnn_model(self, param_set):
+    def define_cnn_model(self, param_set, sub):
         main_input_shape = self._x_train.shape
         main_input = Input((main_input_shape[1:]), name='main_input')
         base_size = int(self.vector_len)
 
-        kernel_regu = regularizers.l2(0.01)
+        kernel_regu = regularizers.l1(0.01)
         kernel_num = param_set['filters']
         kernel_size_1 = param_set['T1KS']
         tower_1 = Conv1D(filters=kernel_num, kernel_size=kernel_size_1, kernel_regularizer=kernel_regu)(main_input)
@@ -192,8 +192,38 @@ class ProcessorSICrossVali(ProcessorSI):
         model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=["mean_squared_error"])
         my_evaluator = Evaluation(self._x_train, self._x_test, self._y_train, self._y_test, self._x_train_aux,
                                   self._x_test_aux)
-        y_pred = my_evaluator.evaluate_nn(model)
+        log_file = 'result_conclusion/{}/training_log/{}.csv'.format(self.test_date, sub)
+        y_pred = my_evaluator.evaluate_nn(model, log_file)
+        model.save('./result_conclusion/{}/model/{}'.format(self.test_date, sub))
         return y_pred
+
+    @staticmethod
+    def define_hp_model(hp):
+        base_size = 33
+        main_input = Input(shape=(base_size, 6), name='main_input')
+        hp_filters = hp.Int("filters", min_value=20, max_value=40, step=1, default=30)
+        hp_NN_layer_1_units = hp.Int("NNL1U", min_value=20, max_value=40, step=1, default=30)
+        hp_learning_rate = hp.Float("LR", min_value=1e-5, max_value=1e-3, default=1e-4, sampling='log')
+        kernel_regu = regularizers.l1(0.01)
+        hp_tower_1_kernel_size, hp_tower_2_kernel_size = 16, 4
+        tower_1 = Conv1D(filters=hp_filters, kernel_size=hp_tower_1_kernel_size, kernel_regularizer=kernel_regu)(main_input)
+        tower_1 = MaxPool1D(pool_size=base_size - hp_tower_1_kernel_size + 1)(tower_1)
+
+        tower_2 = Conv1D(filters=hp_filters, kernel_size=hp_tower_2_kernel_size, kernel_regularizer=kernel_regu)(main_input)
+        tower_2 = MaxPool1D(pool_size=base_size-hp_tower_2_kernel_size+1)(tower_2)
+
+        joined_outputs = concatenate([tower_1, tower_2], axis=-1)
+        joined_outputs = Activation('relu')(joined_outputs)
+        main_outputs = Flatten()(joined_outputs)
+
+        aux_input = Input(shape=(2,), name='aux_input')
+        aux_joined_outputs = concatenate([main_outputs, aux_input])
+        aux_joined_outputs = Dense(hp_NN_layer_1_units, activation='relu')(aux_joined_outputs)
+        aux_joined_outputs = Dense(1, activation='sigmoid')(aux_joined_outputs)
+        model = Model(inputs=[main_input, aux_input], outputs=aux_joined_outputs)
+        optimizer = optimizers.Nadam(lr=hp_learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+        model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=["mean_squared_error"])
+        return model
 
     def tune_nn_model(self, train_during_tuning_id_list, vali_id_list, input_list, output_list, trials_train, trials_test,
                       trial_id_list, sub_id_list, hyper_save_path):
@@ -215,21 +245,72 @@ class ProcessorSICrossVali(ProcessorSI):
         if self.do_input_norm:
             self.norm_input()
 
-        batch_size = 64  # the size of data that be trained together
-        epoch_num = 100
-        tuner = BayesianOptimization(define_model, objective=Objective('mean_squared_error', 'min'), metrics=['mean_squared_error'],
-                                     directory='J:\Projects\HuaWeiProject\codes\job_2022_hyper_search',
-                                     seed=0, executions_per_trial=1, project_name='tuner_logs',
-                                     overwrite=True, max_trials=30)        # HYPER CHANGE
+        save_path = MAIN_DATA_PATH.split('data\\PhaseIData')[0] + 'codes\job_2022_hyper_search'
+        tuner = BayesianOptimization(self.define_hp_model, objective=Objective('mean_squared_error', 'min'), metrics=['mean_squared_error'],
+                                     directory=save_path, seed=0, executions_per_trial=1, project_name='tuner_logs',
+                                     overwrite=True, max_trials=100)        # !!! HYPER CHANGE
         print('Hyper search')
         tuner.search(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-                     batch_size=batch_size, epochs=epoch_num, verbose=1,
+                     batch_size=BATCH_SIZE, epochs=EPOCH_NUM, verbose=1,
                      validation_data=({'main_input': self._x_test, 'aux_input': self._x_test_aux}, self._y_test))
         best_hp = tuner.get_best_hyperparameters()[0]
         print(best_hp.values)
         with open(hyper_save_path, 'wb') as handle:
             pickle.dump(best_hp.values, handle)
         return best_hp.values
+
+
+class ProcessorSICrossValiModelSize(ProcessorSICrossVali):
+
+    def define_cnn_model(self, param_set, sub):
+        main_input_shape = self._x_train.shape
+        main_input = Input((main_input_shape[1:]), name='main_input')
+        base_size = int(self.vector_len)
+
+        kernel_regu = regularizers.l2(0.01)
+        kernel_num = int(param_set['filters'] * self.unit_times)
+        kernel_size_1 = param_set['T1KS']
+        tower_1 = Conv1D(filters=kernel_num, kernel_size=kernel_size_1, kernel_regularizer=kernel_regu)(main_input)
+        if self.layer_num == 1:
+            tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1+1)(tower_1)
+        else:
+            tower_1 = Conv1D(filters=kernel_num, kernel_size=4, kernel_regularizer=kernel_regu)(tower_1)
+            tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1-3)(tower_1)
+
+        kernel_size_2 = param_set['T2KS']
+        tower_2 = Conv1D(filters=kernel_num, kernel_size=kernel_size_2, kernel_regularizer=kernel_regu)(main_input)
+        if self.layer_num == 1:
+            tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2+1)(tower_2)
+        else:
+            tower_2 = Conv1D(filters=kernel_num, kernel_size=4, kernel_regularizer=kernel_regu)(tower_2)
+            tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2-3)(tower_2)
+
+        joined_outputs = concatenate([tower_1, tower_2], axis=-1)
+        joined_outputs = Activation('relu')(joined_outputs)
+        main_outputs = Flatten()(joined_outputs)
+
+        aux_input = Input(shape=(2,), name='aux_input')
+        aux_joined_outputs = concatenate([main_outputs, aux_input])
+        unit_num = int(param_set['NNL1U'] * self.unit_times)
+        for i in range(self.layer_num):
+            aux_joined_outputs = Dense(unit_num, activation='relu')(aux_joined_outputs)
+        aux_joined_outputs = Dense(1, activation='sigmoid')(aux_joined_outputs)
+        model = Model(inputs=[main_input, aux_input], outputs=aux_joined_outputs)
+        optimizer = optimizers.Nadam(lr=param_set['LR'], beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+        model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=["mean_squared_error"])
+        my_evaluator = Evaluation(self._x_train, self._x_test, self._y_train, self._y_test, self._x_train_aux,
+                                  self._x_test_aux)
+        log_file = 'result_conclusion/{}/training_log/{}.csv'.format(self.test_date, sub)
+        y_pred = my_evaluator.evaluate_nn(model, log_file)
+        model.save('./result_conclusion/{}/model/{}'.format(self.test_date, sub))
+        return y_pred
+
+    def prepare_data_cross_vali(self, unit_times, layer_num, *args, **kwargs):
+        self.unit_times = unit_times
+        if layer_num not in [1, 2]:
+            raise ValueError('Layer number should be 1 or 2.')
+        self.layer_num = layer_num
+        return super().prepare_data_cross_vali(*args, **kwargs)
 
 
 
