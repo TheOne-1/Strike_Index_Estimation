@@ -32,10 +32,9 @@ class Evaluation:
         return R2, RMSE, mean_error
 
     def evaluate_nn(self, model, log_file):
-        verbosity = 1
         training_logger = CSVLogger(log_file, append=False, separator=',')
         r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-                      batch_size=BATCH_SIZE, epochs=EPOCH_NUM, verbose=verbosity, callbacks=[training_logger],
+                      batch_size=BATCH_SIZE, epochs=EPOCH_NUM, verbose=1, callbacks=[training_logger],
                       validation_data=({'main_input': self._x_test, 'aux_input': self._x_test_aux}, self._y_test))
         y_pred = model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
                                batch_size=BATCH_SIZE)
@@ -61,44 +60,6 @@ class Evaluation:
         plt.xlabel('true value')
         plt.ylabel('predicted value')
         return float(pearson_coeff), RMSE, mean_error
-
-    @staticmethod
-    def plot_nn_result_cate_color(y_true, y_pred, category_id, category_names, title=''):
-        # change the shape of data so that no error will be raised during pearsonr analysis
-        if title == "Strike Index":
-            bounds = 1
-        elif title == "Loading Rate":
-            bounds = 250
-        if y_true.shape != 1:
-            y_true = y_true.ravel()
-        if y_pred.shape != 1:
-            y_pred = y_pred.ravel()
-        plt.figure()
-        R2, RMSE, mean_error = Evaluation._get_all_scores(y_true, y_pred, precision=3)
-        RMSE_str = str(RMSE[0])
-        mean_error_str = str(mean_error)
-        pearson_coeff = str(pearsonr(y_true, y_pred))[1:6]
-        title_extended = title + '\ncorrelation: ' + pearson_coeff + '   RMSE: ' + RMSE_str + '  Mean error: ' + mean_error_str
-        plt.title(title_extended)
-        print(title_extended)
-        plt.plot([0, bounds], [0, bounds], 'r--')
-        category_list = set(category_id)
-        category_id_array = np.array(category_id)
-        plot_handles, plot_names = [], []
-        for category_id in list(category_list):
-            category_name = category_names[category_id]
-            plot_names.append(category_name)
-            if 'mini' in category_name:
-                plot_pattern = 'x'
-            else:
-                plot_pattern = '.'
-            category_index = np.where(category_id_array == category_id)[0]
-            plt_handle, = plt.plot(y_true[category_index], y_pred[category_index], plot_pattern,
-                                   color=COLORS[category_id])
-            plot_handles.append(plt_handle)
-        plt.legend(plot_handles, plot_names)
-        plt.xlabel('true value')
-        plt.ylabel('predicted value')
 
     @staticmethod
     def plot_continuous_result(y_true, y_pred, title=''):

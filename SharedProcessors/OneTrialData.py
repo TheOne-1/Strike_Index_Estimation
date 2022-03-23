@@ -2,9 +2,6 @@ from SharedProcessors.const import PROCESSED_DATA_PATH, MOCAP_SAMPLE_RATE, ROTAT
     SPECIFIC_CALI_MATRIX, TRIAL_START_BUFFER, FILTER_WIN_LEN
 import numpy as np
 import pandas as pd
-# import modin.pandas as pd
-# import ray
-# ray.init()
 
 
 class OneTrialData:

@@ -149,8 +149,8 @@ if __name__ == "__main__":
     regular_run("main")
     cross_test("main")
     evaluate_train_set_influence("main")
-    evaluate_subject_sufficiency("main")
     evaluate_cnn_size("main")
+    evaluate_subject_sufficiency("main")
 
 
 

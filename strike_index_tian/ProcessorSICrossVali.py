@@ -96,8 +96,6 @@ class ProcessorSICrossVali(ProcessorSI):
                     input_list_test.append(input_list[i_sample])
                     output_list_test.append(output_list[i_sample])
                     test_trial_ids.append(trial_id_list[i_sample])
-            print("Train_size"+str(len(output_list_train)))
-            print("test_size"+str(len(output_list_test)))
 
             self._x_train, self._x_train_aux = self.convert_input_samples(input_list_train, self.sensor_sampling_fre)
             self._y_train = ProcessorSI.convert_output(output_list_train)
@@ -171,11 +169,11 @@ class ProcessorSICrossVali(ProcessorSI):
 
         kernel_regu = regularizers.l1(0.01)
         kernel_num = param_set['filters']
-        kernel_size_1 = param_set['T1KS']
+        kernel_size_1 = 16
         tower_1 = Conv1D(filters=kernel_num, kernel_size=kernel_size_1, kernel_regularizer=kernel_regu)(main_input)
         tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1+1)(tower_1)
 
-        kernel_size_2 = param_set['T2KS']
+        kernel_size_2 = 4
         tower_2 = Conv1D(filters=kernel_num, kernel_size=kernel_size_2, kernel_regularizer=kernel_regu)(main_input)
         tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2+1)(tower_2)
 
@@ -267,9 +265,9 @@ class ProcessorSICrossValiModelSize(ProcessorSICrossVali):
         main_input = Input((main_input_shape[1:]), name='main_input')
         base_size = int(self.vector_len)
 
-        kernel_regu = regularizers.l2(0.01)
+        kernel_regu = regularizers.l1(0.01)
         kernel_num = int(param_set['filters'] * self.unit_times)
-        kernel_size_1 = param_set['T1KS']
+        kernel_size_1 = 16
         tower_1 = Conv1D(filters=kernel_num, kernel_size=kernel_size_1, kernel_regularizer=kernel_regu)(main_input)
         if self.layer_num == 1:
             tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1+1)(tower_1)
@@ -277,7 +275,7 @@ class ProcessorSICrossValiModelSize(ProcessorSICrossVali):
             tower_1 = Conv1D(filters=kernel_num, kernel_size=4, kernel_regularizer=kernel_regu)(tower_1)
             tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1-3)(tower_1)
 
-        kernel_size_2 = param_set['T2KS']
+        kernel_size_2 = 4
         tower_2 = Conv1D(filters=kernel_num, kernel_size=kernel_size_2, kernel_regularizer=kernel_regu)(main_input)
         if self.layer_num == 1:
             tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2+1)(tower_2)
