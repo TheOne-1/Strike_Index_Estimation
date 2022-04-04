@@ -1,5 +1,5 @@
 from ProcessorSICrossVali import ProcessorSICrossVali
-from SharedProcessors.const import SUB_AND_SI_TRIALS, SI_TRIALS
+from SharedProcessors.const import SUB_AND_SI_TRIALS, SI_TRIALS, SUB_NAMES, TRIAL_NAMES
 import matplotlib.pyplot as plt
 import numpy as np
 import copy
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     i_step = 0
     counter_bad = 0
-    bad_si = []
+    bad_si, bad_si_sub, bad_si_trial = [], {sub: 0 for sub in list(train.keys())}, {trial: 0 for trial in SI_TRIALS}
     input_list, _, output_list = my_SI_processor.train_all_data_list.get_input_output_list()
     sub_list = my_SI_processor.train_all_data_list.get_sub_id_list()
     trial_list = my_SI_processor.train_all_data_list.get_trial_id_list()
@@ -30,6 +30,8 @@ if __name__ == "__main__":
             else:
                 prntval = np.max(output_list[i_step])
             bad_si.append(prntval)
+            bad_si_sub[SUB_NAMES[sub_list[i_step]]] += 1
+            bad_si_trial[TRIAL_NAMES[trial_list[i_step]]] += 1
             my_SI_processor.train_all_data_list.pop(i_step)
             counter_bad += 1
 
@@ -39,10 +41,20 @@ if __name__ == "__main__":
     # train_all_data_list = my_SI_processor.clean_all_data(my_SI_processor.train_all_data_list,
     #                                                      my_SI_processor.sensor_sampling_fre)
 
+    for sub in list(train.keys()):
+        if bad_si_sub[sub] > 0:
+            print(sub, end=': ')
+            print(bad_si_sub[sub])
+
+    for trial in SI_TRIALS:
+        if bad_si_trial[trial] > 0:
+            print(trial, end=': ')
+            print(bad_si_trial[trial])
+
     step_num = len(my_SI_processor.train_all_data_list)
     print('Number of steps after removing: {}'.format(step_num))
 
     bad_si = [round(t * 100, 1) for t in bad_si if t > -100]
-    print(max(bad_si))
-    print(min(bad_si))
-    print(bad_si)
+    # print(max(bad_si))
+    # print(min(bad_si))
+    # print(bad_si)

@@ -6,7 +6,7 @@ import numpy as np
 """ Print the best paramters """
 param_set_all = {}
 for sub in SUB_NAMES:
-    with open('./result_conclusion/211206/hyperparameters/{}.pkl'.format(sub), 'rb') as handle:
+    with open('./result_conclusion/220325/hyperparameters/{}.pkl'.format(sub), 'rb') as handle:
         param_set = pickle.load(handle)
         param_set_all[sub] = param_set
         print('{}: {}'.format(sub, param_set))

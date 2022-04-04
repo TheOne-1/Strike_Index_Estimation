@@ -6,7 +6,6 @@ cross validation
 from SharedProcessors.Evaluation import Evaluation
 import pickle
 from tensorflow.keras.layers import *
-from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model
 from keras_tuner.tuners import BayesianOptimization, RandomSearch, Hyperband
 from tensorflow.keras import optimizers
@@ -35,10 +34,10 @@ class ProcessorSICrossVali(ProcessorSI):
 
     @staticmethod
     def fix_seed():
-        os.environ['PYTHONHASHSEED'] = str(0)
-        np.random.seed(0)
-        python_random.seed(0)
-        tf.random.set_seed(0)
+        os.environ['PYTHONHASHSEED'] = str(100)
+        np.random.seed(100)
+        python_random.seed(100)
+        tf.random.set_seed(100)
 
     def prepare_data_cross_vali(self, test_name, test_set_sub_num=1, start_ratio=.5, end_ratio=.7,
                                 pre_samples=12, post_samples=20, trials=[2, 5, 9, 12],
@@ -105,7 +104,7 @@ class ProcessorSICrossVali(ProcessorSI):
             if self.do_input_norm:
                 self.norm_input()
 
-            y_pred = self.define_cnn_model(param_set, SUB_NAMES[test_id_list[0]]).reshape([-1, 1])
+            y_pred = self.define_cnn_model(param_set, SUB_NAMES[test_id_list[0]], test_name).reshape([-1, 1])
 
             pearson_coeff, RMSE, mean_error = Evaluation.plot_nn_result(self._y_test, y_pred, title=SUB_NAMES[test_id_list[0]])
             discrete_prediction_results = pd.DataFrame(columns=["true","pred"])
@@ -162,19 +161,18 @@ class ProcessorSICrossVali(ProcessorSI):
             plt.close(fig)
         pp.close()
 
-    def define_cnn_model(self, param_set, sub):
+    def define_cnn_model(self, param_set, sub, test_name):
         main_input_shape = self._x_train.shape
         main_input = Input((main_input_shape[1:]), name='main_input')
         base_size = int(self.vector_len)
 
-        kernel_regu = regularizers.l1(0.01)
         kernel_num = param_set['filters']
         kernel_size_1 = 16
-        tower_1 = Conv1D(filters=kernel_num, kernel_size=kernel_size_1, kernel_regularizer=kernel_regu)(main_input)
+        tower_1 = Conv1D(filters=kernel_num, kernel_size=kernel_size_1)(main_input)
         tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1+1)(tower_1)
 
         kernel_size_2 = 4
-        tower_2 = Conv1D(filters=kernel_num, kernel_size=kernel_size_2, kernel_regularizer=kernel_regu)(main_input)
+        tower_2 = Conv1D(filters=kernel_num, kernel_size=kernel_size_2)(main_input)
         tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2+1)(tower_2)
 
         joined_outputs = concatenate([tower_1, tower_2], axis=-1)
@@ -190,7 +188,9 @@ class ProcessorSICrossVali(ProcessorSI):
         model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=["mean_squared_error"])
         my_evaluator = Evaluation(self._x_train, self._x_test, self._y_train, self._y_test, self._x_train_aux,
                                   self._x_test_aux)
-        log_file = 'result_conclusion/{}/training_log/{}.csv'.format(self.test_date, sub)
+        log_file = None
+        if test_name == 'main':
+            log_file = 'result_conclusion/{}/training_log/{}.csv'.format(self.test_date, sub)
         y_pred = my_evaluator.evaluate_nn(model, log_file)
         model.save('./result_conclusion/{}/model/{}'.format(self.test_date, sub))
         return y_pred
@@ -202,12 +202,11 @@ class ProcessorSICrossVali(ProcessorSI):
         hp_filters = hp.Int("filters", min_value=20, max_value=40, step=1, default=30)
         hp_NN_layer_1_units = hp.Int("NNL1U", min_value=20, max_value=40, step=1, default=30)
         hp_learning_rate = hp.Float("LR", min_value=1e-5, max_value=1e-3, default=1e-4, sampling='log')
-        kernel_regu = regularizers.l1(0.01)
         hp_tower_1_kernel_size, hp_tower_2_kernel_size = 16, 4
-        tower_1 = Conv1D(filters=hp_filters, kernel_size=hp_tower_1_kernel_size, kernel_regularizer=kernel_regu)(main_input)
+        tower_1 = Conv1D(filters=hp_filters, kernel_size=hp_tower_1_kernel_size)(main_input)
         tower_1 = MaxPool1D(pool_size=base_size - hp_tower_1_kernel_size + 1)(tower_1)
 
-        tower_2 = Conv1D(filters=hp_filters, kernel_size=hp_tower_2_kernel_size, kernel_regularizer=kernel_regu)(main_input)
+        tower_2 = Conv1D(filters=hp_filters, kernel_size=hp_tower_2_kernel_size)(main_input)
         tower_2 = MaxPool1D(pool_size=base_size-hp_tower_2_kernel_size+1)(tower_2)
 
         joined_outputs = concatenate([tower_1, tower_2], axis=-1)
@@ -260,28 +259,29 @@ class ProcessorSICrossVali(ProcessorSI):
 
 class ProcessorSICrossValiModelSize(ProcessorSICrossVali):
 
-    def define_cnn_model(self, param_set, sub):
+    def define_cnn_model(self, param_set, sub, test_name):
         main_input_shape = self._x_train.shape
         main_input = Input((main_input_shape[1:]), name='main_input')
         base_size = int(self.vector_len)
 
-        kernel_regu = regularizers.l1(0.01)
         kernel_num = int(param_set['filters'] * self.unit_times)
         kernel_size_1 = 16
-        tower_1 = Conv1D(filters=kernel_num, kernel_size=kernel_size_1, kernel_regularizer=kernel_regu)(main_input)
+        tower_1 = Conv1D(filters=kernel_num, kernel_size=kernel_size_1)(main_input)
         if self.layer_num == 1:
             tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1+1)(tower_1)
         else:
-            tower_1 = Conv1D(filters=kernel_num, kernel_size=4, kernel_regularizer=kernel_regu)(tower_1)
-            tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1-3)(tower_1)
+            for i in range(self.layer_num - 1):
+                tower_1 = Conv1D(filters=kernel_num, kernel_size=4, padding='same')(tower_1)
+            tower_1 = MaxPool1D(pool_size=base_size-kernel_size_1+1)(tower_1)
 
         kernel_size_2 = 4
-        tower_2 = Conv1D(filters=kernel_num, kernel_size=kernel_size_2, kernel_regularizer=kernel_regu)(main_input)
+        tower_2 = Conv1D(filters=kernel_num, kernel_size=kernel_size_2)(main_input)
         if self.layer_num == 1:
             tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2+1)(tower_2)
         else:
-            tower_2 = Conv1D(filters=kernel_num, kernel_size=4, kernel_regularizer=kernel_regu)(tower_2)
-            tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2-3)(tower_2)
+            for i in range(self.layer_num - 1):
+                tower_2 = Conv1D(filters=kernel_num, kernel_size=4, padding='same')(tower_2)
+            tower_2 = MaxPool1D(pool_size=base_size-kernel_size_2-+1)(tower_2)
 
         joined_outputs = concatenate([tower_1, tower_2], axis=-1)
         joined_outputs = Activation('relu')(joined_outputs)
@@ -305,8 +305,8 @@ class ProcessorSICrossValiModelSize(ProcessorSICrossVali):
 
     def prepare_data_cross_vali(self, unit_times, layer_num, *args, **kwargs):
         self.unit_times = unit_times
-        if layer_num not in [1, 2]:
-            raise ValueError('Layer number should be 1 or 2.')
+        # if layer_num not in [1, 2]:
+        #     raise ValueError('Layer number should be 1 or 2.')
         self.layer_num = layer_num
         return super().prepare_data_cross_vali(*args, **kwargs)
 

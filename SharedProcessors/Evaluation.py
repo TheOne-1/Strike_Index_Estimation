@@ -1,13 +1,45 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import metrics
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.metrics import r2_score, mean_squared_error as mse
 from tensorflow.keras.callbacks import CSVLogger
 from numpy import sqrt
 from scipy.stats import pearsonr
 from tensorflow.keras.callbacks import EarlyStopping
 from SharedProcessors.const import COLORS, EPOCH_NUM, BATCH_SIZE
-import time
+import collections
+import csv
+
+
+class MyCSVLogger(CSVLogger):
+    def __init__(self, filename, separator=',', append=False):
+        super().__init__(filename, separator, append)
+        super().on_train_begin()
+
+    def on_train_begin(self, logs=None):
+        pass
+
+    def add_row(self, y_true_train, y_pred_train, y_true_test, y_pred_test):
+        logs = {'loss': 0, 'mean_squared_error': mse(y_true_train, y_pred_train),
+                'val_loss': 0, 'val_mean_squared_error': mse(y_true_test, y_pred_test)}
+        if self.keys is None:
+            self.keys = sorted(logs.keys())
+        if not self.writer:
+            class CustomDialect(csv.excel):
+                delimiter = self.sep
+
+            fieldnames = ['epoch'] + self.keys
+
+            self.writer = csv.DictWriter(
+                self.csv_file,
+                fieldnames=fieldnames,
+                dialect=CustomDialect)
+            if self.append_header:
+                self.writer.writeheader()
+        row_dict = collections.OrderedDict({'epoch': -1})
+        row_dict.update((key, logs[key]) for key in logs.keys())
+        self.writer.writerow(row_dict)
+        self.csv_file.flush()
 
 
 class Evaluation:
@@ -22,7 +54,7 @@ class Evaluation:
     @staticmethod
     def _get_all_scores(y_test, y_pred, precision=None):
         R2 = r2_score(y_test, y_pred, multioutput='raw_values')
-        RMSE = sqrt(mean_squared_error(y_test, y_pred, multioutput='raw_values'))
+        RMSE = sqrt(mse(y_test, y_pred, multioutput='raw_values'))
         errors = y_test - y_pred
         mean_error = np.mean(errors, axis=0)
         if precision:
@@ -32,9 +64,20 @@ class Evaluation:
         return R2, RMSE, mean_error
 
     def evaluate_nn(self, model, log_file):
-        training_logger = CSVLogger(log_file, append=False, separator=',')
+        callbacks = None
+        if log_file is not None:
+            my_logger = MyCSVLogger(log_file, append=False, separator=',')
+            callbacks = [my_logger]
+            y_pred_train_pretraining = model.predict(x={'main_input': self._x_train, 'aux_input': self._x_train_aux},
+                                                     batch_size=BATCH_SIZE)
+            y_pred_test_pretraining = model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
+                                                    batch_size=BATCH_SIZE)
+            # plt.figure()
+            # plt.plot(self._y_train, y_pred_train_pretraining, '.')
+            # plt.show()
+            my_logger.add_row(self._y_train, y_pred_train_pretraining, self._y_test, y_pred_test_pretraining)
         r = model.fit(x={'main_input': self._x_train, 'aux_input': self._x_train_aux}, y=self._y_train,
-                      batch_size=BATCH_SIZE, epochs=EPOCH_NUM, verbose=1, callbacks=[training_logger],
+                      batch_size=BATCH_SIZE, epochs=EPOCH_NUM, verbose=1, callbacks=callbacks,
                       validation_data=({'main_input': self._x_test, 'aux_input': self._x_test_aux}, self._y_test))
         y_pred = model.predict(x={'main_input': self._x_test, 'aux_input': self._x_test_aux},
                                batch_size=BATCH_SIZE)

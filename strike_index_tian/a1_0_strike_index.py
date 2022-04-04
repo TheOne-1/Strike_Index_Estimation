@@ -4,7 +4,7 @@ import copy
 import pandas as pd
 import os
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'        # seems CPU ('-1') is faster than GPU ('-0') for this CNN model
 IMU_locations = ['l_foot']
 
 train = copy.deepcopy(SUB_AND_SI_TRIALS)
@@ -16,7 +16,7 @@ train = copy.deepcopy(SUB_AND_SI_TRIALS)
 
 def regular_run(basename):
     my_SI_processor = ProcessorSICrossVali(train, IMU_locations, date, strike_off_from_IMU=1,
-                                           do_input_norm=True, tune_hp=True)       # !!!
+                                           do_input_norm=True, tune_hp=False)       # !!!
     print("starting regular run")
     trial_name = basename
     avg_correlation = my_SI_processor.prepare_data_cross_vali(
@@ -139,16 +139,16 @@ def evaluate_subject_sufficiency(basename):
 def evaluate_cnn_size(basename):
     my_SI_processor = ProcessorSICrossValiModelSize(train, IMU_locations, date, strike_off_from_IMU=1, do_input_norm=True)
     print("starting evaluating cnn size")
-    my_SI_processor.prepare_data_cross_vali(0.5, 1, test_name=basename+'_size_half_unit', train_num=len(train)-1)
-    my_SI_processor.prepare_data_cross_vali(2, 1, test_name=basename+'_size_double_unit', train_num=len(train)-1)
-    my_SI_processor.prepare_data_cross_vali(1, 2, test_name=basename+'_size_double_layer', train_num=len(train)-1)
+    my_SI_processor.prepare_data_cross_vali(1, 8, test_name=basename+'_size_8_conv', train_num=len(train)-1)
+    my_SI_processor.prepare_data_cross_vali(1, 4, test_name=basename+'_size_4_conv', train_num=len(train)-1)
+    my_SI_processor.prepare_data_cross_vali(1, 2, test_name=basename+'_size_2_conv', train_num=len(train)-1)
 
 
 if __name__ == "__main__":
-    date = '220322'
+    date = '220325'
     regular_run("main")
+    four_cond("main")
     cross_test("main")
-    evaluate_train_set_influence("main")
     evaluate_cnn_size("main")
     evaluate_subject_sufficiency("main")
 

@@ -6,7 +6,7 @@ from SharedProcessors.const import SUB_ANTHRO, SUB_NAMES
 
 
 if __name__ == "__main__":
-    result_date = '211206'
+    result_date = '220325'
     rmses = metric_sub_mean(result_date, '', rmse_fun)
     rmses = [rmse * 100 for rmse in rmses]
     r2s = metric_sub_mean(result_date, '', r2_score)

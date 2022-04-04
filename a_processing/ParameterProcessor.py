@@ -276,8 +276,9 @@ class ParamProcessor:
         plt.title('trunk swag')
 
     def get_strike_index_all(self, gait_data_df, l_strikes, r_strikes):
-        """ This is Zach's version """
+        """ This is Zach's version, NOT COUNTING THE OFFSET FROM MARKER """
         delay = 4
+        marker_offset = 7
         if "mini" in self._current_trial:
             foot_len = MININ_SHOE_LENGTHS[self._sub_name]
         elif "nike" in self._current_trial:
@@ -515,56 +516,4 @@ class ParamProcessor:
             else:
                 static_data_df = self.mini_static_200_df
         return static_data_df
-
-
-# class ParamProcessor2021(ParamProcessor):
-#     def init_trial_params(self, gait_data_df, grf_1000_df, sensor_sampling_rate):
-#         # get the corresponding plate data period
-#         marker_frame = gait_data_df['marker_frame']
-#         start_vicon, end_vicon = min(marker_frame), max(marker_frame)
-#         vicon_force_ratio = int(PLATE_SAMPLE_RATE / MOCAP_SAMPLE_RATE)
-#         start_row_grf = int((start_vicon - 1) * vicon_force_ratio)
-#         end_row_grf = int(end_vicon * vicon_force_ratio) - 1
-#         plate_data_1000 = grf_1000_df.loc[start_row_grf:end_row_grf].reset_index(drop=True)
-#
-#         # get strikes and offs
-#         l_strikes, r_strikes, l_offs, r_offs = self.get_strike_off(gait_data_df)
-#         l_strikes_1000, r_strikes_1000, l_offs_1000, r_offs_1000 = self.get_strike_off_1000(
-#             gait_data_df, plate_data_1000, sensor_sampling_rate)
-#
-#         # get strike index and FPA
-#         strike_index_all = self.get_strike_index_all(gait_data_df, l_strikes, r_strikes)
-#         strike_angle_all = self.get_foot_strike_angle(gait_data_df)
-#         FPA_all = self.get_FPA_all(gait_data_df)  # FPA of all the samples
-#         param_data = np.column_stack(
-#             [l_strikes, r_strikes, l_offs, r_offs, strike_index_all, strike_angle_all, FPA_all])
-#         param_data_df = pd.DataFrame(param_data)
-#         param_data_df.columns = ['l_strikes', 'r_strikes', 'l_offs', 'r_offs', 'l_strike_index', 'r_strike_index',
-#                                  'l_strike_angle', 'r_strike_angle', 'l_FPA', 'r_FPA']
-#         param_data_df.insert(0, 'marker_frame', gait_data_df['marker_frame'])
-#
-#         # get strikes and offs from IMU data
-#         estimated_strikes, estimated_offs = self.get_strike_off_from_imu(gait_data_df, param_data_df,
-#                                                                          sensor_sampling_rate, check_strike_off=False,
-#                                                                          plot_the_strike_off=False)
-#         param_data_df.insert(len(param_data_df.columns), 'strikes_IMU', estimated_strikes)
-#         param_data_df.insert(len(param_data_df.columns), 'offs_IMU', estimated_offs)
-#
-#         estimated_strikes_lfilter, estimated_offs_lfilter = self.get_strike_off_from_imu_lfilter(
-#             gait_data_df, param_data_df, sensor_sampling_rate, check_strike_off=True)
-#         param_data_df.insert(len(param_data_df.columns), 'strikes_IMU_lfilter', estimated_strikes_lfilter)
-#         param_data_df.insert(len(param_data_df.columns), 'offs_IMU_lfilter', estimated_offs_lfilter)
-#
-#         # get loading rate
-#         l_steps_1000 = self.get_legal_steps(l_strikes_1000, l_offs_1000, 'left', plate_data_1000)
-#         l_LR = self.get_loading_rate(plate_data_1000, l_steps_1000)
-#         self.insert_LR_to_param_data(param_data_df, l_LR, 'l_LR')
-#         r_steps_1000 = self.get_legal_steps(r_strikes_1000, r_offs_1000, 'right', plate_data_1000)
-#         r_LR = self.get_loading_rate(plate_data_1000, r_steps_1000)
-#         self.insert_LR_to_param_data(param_data_df, r_LR, 'r_LR')
-#         return param_data_df, l_steps_1000, r_steps_1000
-
-
-
-
 

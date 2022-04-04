@@ -11,27 +11,27 @@ import prettytable as pt
 import warnings
 
 
-def draw_f5(rmses, conditions, sigifi_sign_fun):
+def draw_f9(rmses, conditions, sigifi_sign_fun):
     def format_ticks():
         ax = plt.gca()
         ax.set_ylabel('Root Mean Square Error (%)', fontdict=FONT_DICT_SMALL, labelpad=5)
-        ax.set_ylim(0.02, 0.26)
-        ax.set_yticks(np.arange(0.02, 0.28, 0.06))
-        ax.set_yticklabels(['2', '8', '14', '20', '26'], fontdict=FONT_DICT_SMALL)
+        # ax.set_ylim(0.02, 0.26)
+        # ax.set_yticks(np.arange(0.02, 0.28, 0.06))
+        # ax.set_yticklabels(['2', '8', '14', '20', '26'], fontdict=FONT_DICT_SMALL)
         ax.set_xlim(-0.5, 3.5)
         ax.set_xticks(bar_locs)
-        ax.set_xticklabels(['Standard\nStandard', 'Minimalist\nMinimalist', 'Standard\nMinimalist', 'Minimalist\nStandard'],
+        ax.set_xticklabels(['main', '2 conv', '4 conv', '8 conv'],
                            fontdict=FONT_DICT_SMALL, linespacing=2.2)
         ax.tick_params(axis='x', which='major', pad=10)
         for xtick, color in zip(ax.get_xticklabels(), colors):
             xtick.set_color(color)
-        base_x, base_y = -0.22, -0.123
-        ax.add_patch(mpl.patches.Rectangle((base_x, base_y), ls='--', width=1.23, height=0.066, ec="gray", fill=False,
-                                           transform=ax.transAxes, clip_on=False))
-        plt.text(base_x+0.02, base_y + 0.015, 'Training', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
-        ax.add_patch(mpl.patches.Rectangle((base_x, base_y-0.085), ls='--', width=1.23, height=0.066, ec="gray", fill=False,
-                                           transform=ax.transAxes, clip_on=False))
-        plt.text(base_x+0.02, base_y-0.071, 'Test', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
+        # base_x, base_y = -0.22, -0.123
+        # ax.add_patch(mpl.patches.Rectangle((base_x, base_y), ls='--', width=1.23, height=0.066, ec="gray", fill=False,
+        #                                    transform=ax.transAxes, clip_on=False))
+        # plt.text(base_x+0.02, base_y + 0.015, 'Training', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
+        # ax.add_patch(mpl.patches.Rectangle((base_x, base_y-0.085), ls='--', width=1.23, height=0.066, ec="gray", fill=False,
+        #                                    transform=ax.transAxes, clip_on=False))
+        # plt.text(base_x+0.02, base_y-0.071, 'Test', transform=ax.transAxes, fontdict=FONT_DICT_SMALL)
 
     rc('font', family='Arial')
     fig = plt.figure(figsize=(3.54, 3.2))
@@ -47,7 +47,7 @@ def draw_f5(rmses, conditions, sigifi_sign_fun):
         box_['medians'][0].set(linewidth=LINE_WIDTH, color=[1, 1, 1])
 
     plt.tight_layout(rect=[0.02, 0.07, 1.01, 1.01])
-    sigifi_sign_fun(rmses, bar_locs, two_four=True, one_four=True)
+    # sigifi_sign_fun(rmses, bar_locs, two_four=True, one_four=True)
     format_ticks()
 
 
@@ -106,15 +106,13 @@ def statistics(result_df, rmses, conditions):
 
 if __name__ == "__main__":
     result_date = '220325'
-    condition_and_train_test = {'_Trad': ('Standard', 'Standard'), '_Minim': ('Minimalist', 'Minimalist'),
-                                '_trTradteMinim': ('Standard', 'Minimalist'), '_trMinimteTrad': ('Minimalist', 'Standard')}
-    conditions = list(condition_and_train_test.keys())
+    conditions = ['', '_size_2_conv', '_size_4_conv', '_size_8_conv']
     rmses = {condition: metric_sub_mean(result_date, condition, rmse_fun) for condition in conditions}
+    for condition in conditions:
+        print('{:.1f}'.format(100*np.mean(rmses[condition])), end='%, ')
 
-    result_df = transfer_data_to_long_df(condition_and_train_test, conditions, rmses)
-    statistics(result_df, rmses, conditions)
     with warnings.catch_warnings():
         warnings.simplefilter(action='ignore', category=FutureWarning)
-        draw_f5(rmses, conditions, draw_sigifi_sign)
-    save_fig('f5', 600)
-    plt.show()
+        draw_f9(rmses, conditions, draw_sigifi_sign)
+    # save_fig('f9', 600)
+    # plt.show()

@@ -19,39 +19,37 @@ def draw_f8(rmse_mean, rmse_std):
     def draw_lines(rmse_mean, rmse_std):
         ax = plt.gca()
         color_0 = np.array([37, 128, 92]) / 255
-        axis_x = range(rmse_mean.shape[0])
-        plt.plot(axis_x, rmse_mean, label='Training Set', linewidth=LINE_WIDTH, color=color_0)
+        axis_x = range(1, 16)
+        plt.plot(axis_x, rmse_mean, linewidth=LINE_WIDTH, color=color_0)
         plt.fill_between(axis_x, rmse_mean - rmse_std, rmse_mean + rmse_std, facecolor=color_0, alpha=0.4)
 
         ax.tick_params(labelsize=FONT_DICT_SMALL['fontsize'])
-        ax.set_xticks(range(0, rmse_mean.shape[0] + 1, 25))
-        ax.set_xticklabels(range(0, rmse_mean.shape[0] + 1, 25), fontdict=FONT_DICT_SMALL)
-        ax.set_xlabel('Epoch', fontdict=FONT_DICT_SMALL)
-        ax.set_xlim(0, rmse_mean.shape[0])
+        ax.set_xticks(range(1, 16, 2))
+        ax.set_xticklabels(range(1, 16, 2), fontdict=FONT_DICT_SMALL)
+        ax.set_xlabel('Number of Participant Used for Training', fontdict=FONT_DICT_SMALL)
+        ax.set_xlim(1, 15)
 
         ax = plt.gca()
         ax.set_ylabel('RMSE', fontdict=FONT_DICT_SMALL)
-        ax.set_ylim(0, 0.2)
-        ticks = [0, 0.05, 0.1, 0.15, 0.2]
+        ax.set_ylim(0, 0.16)
+        ticks = [0, 0.04, 0.08, 0.12, 0.16]
         ax.set_yticks(ticks)
         ax.set_yticklabels(ticks, fontdict=FONT_DICT_SMALL)
 
     rc('font', family='Arial')
-    plt.figure(figsize=(3.54, 3.2))
+    plt.figure(figsize=(3.54, 2.8))
     draw_lines(rmse_mean, rmse_std)
     format_axis()
     plt.tight_layout(rect=[-0.02, -0.02, 1.02, 1.02])
-    plt.legend(handlelength=3, bbox_to_anchor=(0.98, 0.95), ncol=1, fontsize=FONT_DICT_SMALL['fontsize'],
-               frameon=False)
     save_fig('f8', 600)
     plt.show()
 
 
 if __name__ == '__main__':
-    result_date = '220321'
+    result_date = '220325'
     rmses = []
-    for sub_num in [1, 2, 16]:        # range(1, 17)
-        if sub_num is not 16:
+    for sub_num in range(1, 16):
+        if sub_num is not 15:
             condition = f"_training_with_{sub_num}"
         else:
             condition = ""

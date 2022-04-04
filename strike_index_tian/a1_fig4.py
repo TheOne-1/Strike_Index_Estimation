@@ -1,4 +1,4 @@
-from SharedProcessors.const import SUB_NAMES, LINE_WIDTH, FONT_DICT_SMALL
+from SharedProcessors.const import SUB_NAMES, LINE_WIDTH, FONT_DICT_SMALL, EPOCH_NUM
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -29,7 +29,7 @@ def draw_f7(training_mean, training_std, test_mean, test_std):
         ax.set_xticks(range(0, training_mean.shape[0]+1, 25))
         ax.set_xticklabels(range(0, training_mean.shape[0]+1, 25), fontdict=FONT_DICT_SMALL)
         ax.set_xlabel('Epoch', fontdict=FONT_DICT_SMALL)
-        ax.set_xlim(0, training_mean.shape[0])
+        ax.set_xlim(-1, training_mean.shape[0]-1)
 
         ax = plt.gca()
         ax.set_ylabel('RMSE', fontdict=FONT_DICT_SMALL)
@@ -39,7 +39,7 @@ def draw_f7(training_mean, training_std, test_mean, test_std):
         ax.set_yticklabels(ticks, fontdict=FONT_DICT_SMALL)
 
     rc('font', family='Arial')
-    plt.figure(figsize=(3.54, 3.2))
+    plt.figure(figsize=(3.54, 2.8))
     draw_lines(training_mean, training_std, test_mean, test_std)
     format_axis()
     plt.tight_layout(rect=[-0.02, -0.02, 1.02, 1.02])
@@ -50,7 +50,7 @@ def draw_f7(training_mean, training_std, test_mean, test_std):
 
 
 if __name__ == '__main__':
-    result_date = '220321'
+    result_date = '220325'
     training_rmse, test_rmse = [], []
     for sub in SUB_NAMES:  # SUB_NAMES
         training_log = pd.read_csv('./result_conclusion/{}/training_log/{}.csv'.format(result_date, sub), index_col=False)

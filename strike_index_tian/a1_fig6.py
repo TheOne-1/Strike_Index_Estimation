@@ -47,9 +47,9 @@ def show_each_pair(result_all_df, sub_id):
 
 
 if __name__ == "__main__":
-    result_all_df = pd.read_csv('result_conclusion/{}/step_result/main.csv'.format('211206'))
+    result_all_df = pd.read_csv('result_conclusion/{}/step_result/main.csv'.format('220325'))
     # for sub_id in range(len(SUB_NAMES)):
     #     show_each_pair(result_all_df, sub_id)
-    show_each_pair(result_all_df, 5)        # could be from 0, 2, 5, 9, 10
+    show_each_pair(result_all_df, 9)        # could be from 0, 2, 5, 9, 10
     plt.show()
 

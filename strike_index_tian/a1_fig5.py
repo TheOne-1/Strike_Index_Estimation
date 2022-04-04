@@ -51,12 +51,12 @@ def plot_confusion_matrix(cm, labels_name):
             else:
                 plt.text(first_index, second_index, b, fontsize=FONT_SIZE_SMALL, va='center', ha='center')
     plt.tight_layout()
-    save_fig('f3')
+    save_fig('f5')
     plt.show()
 
 
 if __name__ == '__main__':
-    result_date = '211206'
+    result_date = '220325'
     cm = load_step_cm(result_date)
     print('correctly classified {:.1f}\%, {:.1f}\%, and {:.1f}\%'.format(100*cm[0, 0], 100*cm[1, 1], 100*cm[2, 2]))
     plot_confusion_matrix(cm, ['Forefoot', 'Midfoot', 'Rearfoot'])
